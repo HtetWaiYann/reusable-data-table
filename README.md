@@ -52,4 +52,4 @@ _TODO_
 
 ## With more time
 
-_TODO_
+- **Custom sort comparator per column** (`compare?: (a, b) => number` on `ColumnDef`), for two-level sorts or orders that aren't based on a value. Today, custom orders work by having `getValue` return a rank (e.g. `STATUS_RANK[row.status]`), and server-defined orders use `manualSorting`.
