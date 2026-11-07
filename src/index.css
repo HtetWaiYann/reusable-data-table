@@ -1,0 +1,59 @@
+/* Design tokens. The table and pages read colours and spacing from here, never hard-coded values. */
+:root {
+  --color-text: #1f2328;
+  --color-text-muted: #656d76;
+  --color-bg: #ffffff;
+  --color-surface: #f6f8fa;
+  --color-border: #d0d7de;
+  --color-accent: #0969da;
+  --space-2: 8px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --nav-width: 200px;
+  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  font: 15px/1.5 var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--nav-width) 1fr;
+  min-height: 100vh;
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+}
+
+.app-nav a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.app-nav a[aria-current="page"] {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* min-width: 0 lets the grid column shrink, so a wide table scrolls inside its own wrapper instead of widening the page. */
+.app-main {
+  min-width: 0;
+  padding: var(--space-6);
+}
