@@ -51,6 +51,7 @@ const memberColumns: ColumnDef<Member>[] = [
 
 const DEFAULT_MEMBER_SORT: SortState = { columnId: "name", direction: "asc" };
 
+// Custom render, added on top of the data-only configs below when "Custom" is picked.
 function renderBookings(bookings: Booking[], row: Member) {
   return <BookingTable bookings={bookings} memberName={row.name} />;
 }
@@ -58,7 +59,8 @@ function renderBookings(bookings: Booking[], row: Member) {
 const inlineBookingsExpansion: ExpansionConfig<Member, Booking> = {
   mode: "inline",
   getChildren: (row) => row.bookings,
-  renderChildren: renderBookings,
+  childIdKey: "id",
+  hideChildKeys: ["id"],
 };
 
 function createLazyBookingsExpansion(
@@ -68,7 +70,8 @@ function createLazyBookingsExpansion(
     mode: "lazy",
     loadChildren: (row, signal) =>
       fetchChildren(row.bookings, scenario, signal),
-    renderChildren: renderBookings,
+    childIdKey: "id",
+    hideChildKeys: ["id"],
   };
 }
 
@@ -94,13 +97,15 @@ export function MembersTable({ options }: MembersTableProps): ReactElement {
     errorMessage: "We couldn't load the members. Please try again.",
   });
 
-  const expansion = useMemo(
-    () =>
+  const expansion = useMemo((): ExpansionConfig<Member, Booking> => {
+    const dataOnly =
       options.childRows === "lazy"
         ? createLazyBookingsExpansion(options.scenario)
-        : inlineBookingsExpansion,
-    [options.childRows, options.scenario],
-  );
+        : inlineBookingsExpansion;
+    return options.childRender === "custom"
+      ? { ...dataOnly, renderChildren: renderBookings }
+      : dataOnly;
+  }, [options.childRows, options.childRender, options.scenario]);
 
   return (
     <DataTable

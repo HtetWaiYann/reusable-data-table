@@ -15,6 +15,13 @@ const TITLES: Record<Dataset, string> = {
   members: "Members",
 };
 
+const DESCRIPTIONS: Record<Dataset, string> = {
+  timetable:
+    "This week's classes. Expand a class to see who booked, how they paid and whether they checked in.",
+  members:
+    "Studio members and their upcoming bookings. Same table component, different columns and data.",
+};
+
 /**
  * Route "/": the only page. The control panel switches dataset and modes; the options live in the
  * URL, so every setup can be shared or bookmarked.
@@ -34,14 +41,21 @@ export default function DashboardPage(): ReactElement {
   const tableKey = toSearchParams(options).toString();
 
   return (
-    <>
-      <h1>{TITLES[options.dataset]}</h1>
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-col gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {TITLES[options.dataset]}
+        </h1>
+        <p className="text-pretty text-zinc-600">
+          {DESCRIPTIONS[options.dataset]}
+        </p>
+      </header>
       <ControlPanel options={options} onChange={handleOptionsChange} />
       {options.dataset === "timetable" ? (
         <TimetableTable key={tableKey} options={options} />
       ) : (
         <MembersTable key={tableKey} options={options} />
       )}
-    </>
+    </div>
   );
 }

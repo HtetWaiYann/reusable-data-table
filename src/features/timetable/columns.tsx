@@ -1,3 +1,4 @@
+import type { ReactElement } from "react";
 import type {
   ColumnDef,
   ExpansionConfig,
@@ -6,10 +7,16 @@ import type {
 import { fetchChildren, type MockScenario } from "../../mocks/api.ts";
 import { AttendeeTable } from "./AttendeeTable.tsx";
 import { getAttendance, getClassStatus } from "./classStatus.ts";
-import type { Attendee, ClassSession } from "./types.ts";
-import styles from "../common/childTable.module.css";
+import { StatusBadge, type BadgeTone } from "../common/StatusBadge.tsx";
+import type { Attendee, ClassSession, ClassStatus } from "./types.ts";
 
 const MS_PER_MINUTE = 60_000;
+
+const CLASS_STATUS_TONE: Record<ClassStatus, BadgeTone> = {
+  Scheduled: "neutral",
+  Full: "warning",
+  Cancelled: "danger",
+};
 
 // Built once: creating a formatter is slow, and every Time cell uses them.
 const dayFormat = new Intl.DateTimeFormat(undefined, { weekday: "short" });
@@ -63,11 +70,7 @@ export const timetableColumns: ColumnDef<ClassSession>[] = [
     getValue: getClassStatus,
     renderCell: (row) => {
       const status = getClassStatus(row);
-      return (
-        <span className={styles.badge} data-status={status}>
-          {status}
-        </span>
-      );
+      return <StatusBadge label={status} tone={CLASS_STATUS_TONE[status]} />;
     },
     sortable: true,
   },
@@ -79,20 +82,33 @@ export const DEFAULT_TIMETABLE_SORT: SortState = {
   direction: "asc",
 };
 
-function renderAttendees(attendees: Attendee[], row: ClassSession) {
+/**
+ * Custom render for attendees: a table with status badges. Added on top of the data-only configs
+ * below; without it the DataTable draws its built-in child table from the same data.
+ *
+ * @param attendees - The class's attendees.
+ * @param row - The class, for the nested table's accessible name.
+ * @returns The attendee table.
+ */
+export function renderAttendees(
+  attendees: Attendee[],
+  row: ClassSession,
+): ReactElement {
   return <AttendeeTable attendees={attendees} className={row.name} />;
 }
 
-/** Inline mode: attendees arrive with each class, so expanding is instant. */
+/** Inline mode: attendees arrive with each class, so expanding is instant. Data only: no render. */
 export const inlineAttendeesExpansion: ExpansionConfig<ClassSession, Attendee> =
   {
     mode: "inline",
     getChildren: (row) => row.attendees,
-    renderChildren: renderAttendees,
+    // For the built-in child table: ids make good React keys but mean nothing to a reader.
+    childIdKey: "id",
+    hideChildKeys: ["id"],
   };
 
 /**
- * Lazy mode: attendees are fetched when a class is expanded. Same child data and rendering as
+ * Lazy mode: attendees are fetched when a class is expanded. Same child data as
  * inline, so the two modes are directly comparable. Call it inside `useMemo` to keep it stable.
  *
  * @param scenario - Fake API behaviour (from `?scenario=`).
@@ -106,6 +122,7 @@ export function createLazyAttendeesExpansion(
     // A real API would fetch by `row.id`; the fake one is handed the class's attendees to return.
     loadChildren: (row, signal) =>
       fetchChildren(row.attendees, scenario, signal),
-    renderChildren: renderAttendees,
+    childIdKey: "id",
+    hideChildKeys: ["id"],
   };
 }

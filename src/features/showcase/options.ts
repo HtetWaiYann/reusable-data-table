@@ -4,6 +4,8 @@ import type { MockScenario } from "../../mocks/api.ts";
 export type Dataset = "timetable" | "members";
 /** How child rows arrive: with the parent row, or fetched when a row expands. */
 export type ChildRowsMode = "inline" | "lazy";
+/** How child rows look: the table's built-in table (data only), or the consumer's own render. */
+export type ChildRender = "builtin" | "custom";
 /** Where sorting and paging happen: in the browser, or on the (fake) server. */
 export type DataMode = "client" | "server";
 /** Normal size, or the large dataset for the performance check. */
@@ -13,17 +15,22 @@ export type DataSize = "small" | "large";
 export interface ShowcaseOptions {
   dataset: Dataset;
   childRows: ChildRowsMode;
+  childRender: ChildRender;
   dataMode: DataMode;
   size: DataSize;
   scenario: MockScenario;
 }
 
 /** Row counts per size. */
-export const ROW_COUNTS: Record<DataSize, number> = { small: 50, large: 5000 };
+export const ROW_COUNTS: Record<DataSize, number> = {
+  small: 50,
+  large: 50_000,
+};
 
 export const DEFAULT_OPTIONS: ShowcaseOptions = {
   dataset: "timetable",
   childRows: "inline",
+  childRender: "custom",
   dataMode: "client",
   size: "small",
   scenario: "normal",
@@ -38,6 +45,7 @@ const PARAMS: {
 } = {
   dataset: { name: "dataset", values: ["timetable", "members"] },
   childRows: { name: "children", values: ["inline", "lazy"] },
+  childRender: { name: "render", values: ["builtin", "custom"] },
   dataMode: { name: "mode", values: ["client", "server"] },
   size: { name: "size", values: ["small", "large"] },
   scenario: { name: "scenario", values: ["normal", "slow", "error", "empty"] },
@@ -47,6 +55,7 @@ const PARAMS: {
 const OPTION_KEYS: readonly (keyof ShowcaseOptions)[] = [
   "dataset",
   "childRows",
+  "childRender",
   "dataMode",
   "size",
   "scenario",
@@ -79,6 +88,11 @@ export function parseShowcaseOptions(params: URLSearchParams): ShowcaseOptions {
       params.get(PARAMS.childRows.name),
       PARAMS.childRows.values,
       DEFAULT_OPTIONS.childRows,
+    ),
+    childRender: pick(
+      params.get(PARAMS.childRender.name),
+      PARAMS.childRender.values,
+      DEFAULT_OPTIONS.childRender,
     ),
     dataMode: pick(
       params.get(PARAMS.dataMode.name),

@@ -1,6 +1,18 @@
 import type { ReactElement } from "react";
-import type { Attendee } from "./types.ts";
-import styles from "../common/childTable.module.css";
+import {
+  CHILD_EMPTY_CLASS,
+  CHILD_TABLE_CARD_CLASS,
+  CHILD_TABLE_CLASS,
+} from "../common/childTable.ts";
+import { StatusBadge, type BadgeTone } from "../common/StatusBadge.tsx";
+import type { Attendee, BookingStatus } from "./types.ts";
+
+const BOOKING_STATUS_TONE: Record<BookingStatus, BadgeTone> = {
+  Booked: "neutral",
+  "Checked-in": "success",
+  Cancelled: "danger",
+  "No-show": "danger",
+};
 
 /** Props of {@link AttendeeTable}. */
 export interface AttendeeTableProps {
@@ -21,33 +33,36 @@ export function AttendeeTable({
   className,
 }: AttendeeTableProps): ReactElement {
   if (attendees.length === 0) {
-    return <p className={styles.empty}>No attendees yet.</p>;
+    return <p className={CHILD_EMPTY_CLASS}>No attendees yet.</p>;
   }
   return (
-    <table className={styles.childTable} aria-label={`Attendees: ${className}`}>
-      <thead>
-        <tr>
-          <th scope="col">Customer</th>
-          <th scope="col">Payment</th>
-          <th scope="col">Booking status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {attendees.map((attendee) => (
-          <tr key={attendee.id}>
-            <td>{attendee.name}</td>
-            <td>{attendee.paymentType}</td>
-            <td>
-              <span
-                className={styles.badge}
-                data-status={attendee.bookingStatus}
-              >
-                {attendee.bookingStatus}
-              </span>
-            </td>
+    <div className={CHILD_TABLE_CARD_CLASS}>
+      <table
+        className={CHILD_TABLE_CLASS}
+        aria-label={`Attendees: ${className}`}
+      >
+        <thead>
+          <tr>
+            <th scope="col">Customer</th>
+            <th scope="col">Payment</th>
+            <th scope="col">Booking status</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {attendees.map((attendee) => (
+            <tr key={attendee.id}>
+              <td>{attendee.name}</td>
+              <td>{attendee.paymentType}</td>
+              <td>
+                <StatusBadge
+                  label={attendee.bookingStatus}
+                  tone={BOOKING_STATUS_TONE[attendee.bookingStatus]}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -1,5 +1,8 @@
 import { useMemo, type ReactElement } from "react";
-import { DataTable } from "../../components/data-table/index.ts";
+import {
+  DataTable,
+  type ExpansionConfig,
+} from "../../components/data-table/index.ts";
 import { getClassSessions } from "../../mocks/timetable.ts";
 import { ROW_COUNTS, type ShowcaseOptions } from "../showcase/options.ts";
 import { useTableData } from "../showcase/useTableData.ts";
@@ -7,8 +10,10 @@ import {
   createLazyAttendeesExpansion,
   DEFAULT_TIMETABLE_SORT,
   inlineAttendeesExpansion,
+  renderAttendees,
   timetableColumns,
 } from "./columns.tsx";
+import type { Attendee, ClassSession } from "./types.ts";
 
 /** Props of {@link TimetableTable}. */
 export interface TimetableTableProps {
@@ -31,14 +36,17 @@ export function TimetableTable({ options }: TimetableTableProps): ReactElement {
     errorMessage: "We couldn't load the timetable. Please try again.",
   });
 
-  // Memoized on what the lazy loader depends on, so it stays the same function between renders.
-  const expansion = useMemo(
-    () =>
+  // Memoized on what it depends on, so it stays the same object between renders.
+  const expansion = useMemo((): ExpansionConfig<ClassSession, Attendee> => {
+    const dataOnly =
       options.childRows === "lazy"
         ? createLazyAttendeesExpansion(options.scenario)
-        : inlineAttendeesExpansion,
-    [options.childRows, options.scenario],
-  );
+        : inlineAttendeesExpansion;
+    // Custom adds our own render; built-in passes the data alone and the table draws the rest.
+    return options.childRender === "custom"
+      ? { ...dataOnly, renderChildren: renderAttendees }
+      : dataOnly;
+  }, [options.childRows, options.childRender, options.scenario]);
 
   return (
     <DataTable

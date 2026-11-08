@@ -131,13 +131,13 @@ export function createClassSessions(
   });
 }
 
-// One array per size, built on first use: the 5,000-row set is only generated if someone picks it.
+// One array per size, built on first use: the 50,000-row set is only generated if someone picks it.
 const sessionsBySize = new Map<number, ClassSession[]>();
 
 /**
  * The timetable's mock data for a row count. Same array every call, so React sees stable data.
  *
- * @param count - Number of classes (50 by default, 5,000 for the large-data option).
+ * @param count - Number of classes (50 by default, 50,000 for the large-data option).
  * @returns The sessions.
  */
 export function getClassSessions(count: number): ClassSession[] {

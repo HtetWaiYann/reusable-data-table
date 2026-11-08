@@ -14,12 +14,13 @@ describe("showcase options", () => {
 
   it("reads every option from its URL param", () => {
     const params = new URLSearchParams(
-      "dataset=members&children=lazy&mode=server&size=large&scenario=slow",
+      "dataset=members&children=lazy&render=builtin&mode=server&size=large&scenario=slow",
     );
 
     expect(parseShowcaseOptions(params)).toEqual({
       dataset: "members",
       childRows: "lazy",
+      childRender: "builtin",
       dataMode: "server",
       size: "large",
       scenario: "slow",
