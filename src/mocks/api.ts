@@ -1,4 +1,4 @@
-import type { ClassSession } from "../features/timetable/types.ts";
+import type { Attendee, ClassSession } from "../features/timetable/types.ts";
 import { classSessions } from "./timetable.ts";
 
 /** How the fake API behaves, picked with `?scenario=` in the URL to demo each table state. */
@@ -61,4 +61,30 @@ export async function fetchClassSessions(
     return [];
   }
   return classSessions;
+}
+
+/**
+ * Fake "GET /classes/:id/attendees": the timetable's child rows in lazy mode.
+ * (The class list still carries attendees for the Attendance count; a real API would send a count.)
+ *
+ * @param classId - The expanded class.
+ * @param scenario - Which behaviour to simulate; "empty" means nobody booked.
+ * @param signal - Aborts the request, like `fetch`'s `signal`.
+ * @returns The class's attendees, possibly none.
+ */
+export async function fetchClassAttendees(
+  classId: string,
+  scenario: MockScenario,
+  signal: AbortSignal,
+): Promise<Attendee[]> {
+  await wait(LATENCY_MS[scenario], signal);
+  if (scenario === "error") {
+    throw new Error("Mock API: 500 while loading attendees.");
+  }
+  if (scenario === "empty") {
+    return [];
+  }
+  return (
+    classSessions.find((session) => session.id === classId)?.attendees ?? []
+  );
 }

@@ -1,0 +1,82 @@
+/* --- Attendee child rows --- */
+
+.attendees {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.attendees th,
+.attendees td {
+  padding: var(--space-1) var(--space-3);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.attendees th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.attendees tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+/* --- Status badges (class status and booking status) --- */
+
+/* Text always says the status; colour only reinforces it, so it doesn't rely on colour alone.
+   vertical-align: top keeps the badge inside one text line; on the baseline it stretched the row
+   by 0.5px, so loaded rows no longer matched the skeleton rows. */
+.badge {
+  display: inline-block;
+  vertical-align: top;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-1);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-sm);
+}
+
+.badge[data-status="Full"],
+.badge[data-status="Checked-in"] {
+  color: var(--color-accent);
+  border-color: currentcolor;
+}
+
+.badge[data-status="Cancelled"],
+.badge[data-status="No-show"] {
+  color: var(--color-danger);
+  border-color: currentcolor;
+}
+
+/* --- Expansion mode switch --- */
+
+.modeSwitch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  border: 0;
+  font-size: var(--font-size-sm);
+}
+
+.modeSwitch legend {
+  float: left;
+  padding: 0;
+  color: var(--color-text-muted);
+}
+
+.modeSwitch label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  cursor: pointer;
+}
