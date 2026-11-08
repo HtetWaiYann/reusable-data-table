@@ -1,11 +1,30 @@
-import type { ReactElement } from "react";
+import type { ReactElement, UIEvent } from "react";
 import { usePagination } from "./hooks/usePagination.ts";
+import { usePinnedColumn } from "./hooks/usePinnedColumn.ts";
 import { useSorting } from "./hooks/useSorting.ts";
 import { Pagination } from "./Pagination.tsx";
 import { TableHeader } from "./TableHeader.tsx";
 import { TableRow } from "./TableRow.tsx";
 import type { DataTableProps } from "./types.ts";
 import styles from "./data-table.module.css";
+
+// Shows the pinned column's shadow only while it's stuck and other cells pass underneath.
+// Writes a data attribute instead of setting state, so scrolling never re-renders the table.
+function handleScroll(event: UIEvent<HTMLDivElement>): void {
+  const box = event.currentTarget;
+  const pinnedHeader = box.querySelector("th[data-pinned]");
+  if (!pinnedHeader) {
+    return;
+  }
+  // The pinned column's resting position is where the column before it ends (0 if it's first).
+  // It sticks once the box has scrolled past that point.
+  const previous = pinnedHeader.previousElementSibling;
+  const restingLeft =
+    previous instanceof HTMLElement
+      ? previous.offsetLeft + previous.offsetWidth
+      : 0;
+  box.dataset.pinnedStuck = String(box.scrollLeft > restingLeft);
+}
 
 /**
  * A reusable data table
@@ -67,6 +86,8 @@ export function DataTable<TRow, TChild = never>(
     pageSizeOptions,
   });
 
+  const pinnedColumnId = usePinnedColumn(columns);
+
   function handleSort(columnId: string): void {
     sorting.toggleSort(columnId);
     // Back to page 1: page 3 of the old order would show unrelated rows.
@@ -78,7 +99,7 @@ export function DataTable<TRow, TChild = never>(
   return (
     <div className={styles.root}>
       {/* The wrapper scrolls, so a wide table never widens the page. */}
-      <div className={styles.scroll}>
+      <div className={styles.scroll} onScroll={handleScroll}>
         <table className={styles.table}>
           <caption className={styles.caption}>
             <span className={styles.captionText}>{caption}</span>
@@ -86,12 +107,18 @@ export function DataTable<TRow, TChild = never>(
           <TableHeader
             columns={columns}
             sort={sorting.sort}
+            pinnedColumnId={pinnedColumnId}
             onSort={handleSort}
           />
           <tbody>
             {paging.pageRows.map((row) => (
               // Never use the index. After sorting, index keys would attach state to the wrong row.
-              <TableRow key={getRowId(row)} row={row} columns={columns} />
+              <TableRow
+                key={getRowId(row)}
+                row={row}
+                columns={columns}
+                pinnedColumnId={pinnedColumnId}
+              />
             ))}
           </tbody>
         </table>

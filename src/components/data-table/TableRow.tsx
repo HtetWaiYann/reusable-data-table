@@ -1,4 +1,5 @@
 import { memo, type ReactElement } from "react";
+import { getCellProps } from "./cellProps.ts";
 import type { ColumnDef } from "./types.ts";
 import { formatCellValue } from "./utils/cell.ts";
 import styles from "./data-table.module.css";
@@ -7,16 +8,21 @@ import styles from "./data-table.module.css";
 export interface TableRowProps<TRow> {
   row: TRow;
   columns: ColumnDef<TRow>[];
+  pinnedColumnId: string | null;
 }
 
 function TableRowComponent<TRow>({
   row,
   columns,
+  pinnedColumnId,
 }: TableRowProps<TRow>): ReactElement {
   return (
     <tr className={styles.row}>
       {columns.map((column) => (
-        <td key={column.id} className={styles.cell}>
+        <td
+          key={column.id}
+          {...getCellProps(column, pinnedColumnId, styles.cell)}
+        >
           {column.renderCell
             ? column.renderCell(row)
             : formatCellValue(column.getValue?.(row))}

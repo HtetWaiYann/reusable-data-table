@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { getCellProps } from "./cellProps.ts";
 import type { ColumnDef, SortDirection, SortState } from "./types.ts";
 import styles from "./data-table.module.css";
 
@@ -6,6 +7,7 @@ import styles from "./data-table.module.css";
 export interface TableHeaderProps<TRow> {
   columns: ColumnDef<TRow>[];
   sort: SortState;
+  pinnedColumnId: string | null;
   onSort: (columnId: string) => void;
 }
 
@@ -27,6 +29,7 @@ const UNSORTED_ARROW = "↕";
 export function TableHeader<TRow>({
   columns,
   sort,
+  pinnedColumnId,
   onSort,
 }: TableHeaderProps<TRow>): ReactElement {
   return (
@@ -41,8 +44,7 @@ export function TableHeader<TRow>({
               key={column.id}
               scope="col"
               aria-sort={direction ? ARIA_SORT[direction] : undefined}
-              style={{ width: column.width }}
-              className={styles.headerCell}
+              {...getCellProps(column, pinnedColumnId, styles.headerCell)}
             >
               {column.sortable ? (
                 <button

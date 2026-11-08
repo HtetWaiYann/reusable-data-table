@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DataTable, type ColumnDef } from "./index.ts";
 
 interface Person {
@@ -155,5 +155,39 @@ describe("DataTable pagination", () => {
 
     expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
     expect(firstColumn()[0]).toBe("P01");
+  });
+});
+
+describe("DataTable pinned column", () => {
+  it("pins the first pinned column, even when it isn't the first column", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const pinnedColumns: ColumnDef<Person>[] = [
+      { id: "id", header: "Id", getValue: (row) => row.id },
+      columns[1],
+      { ...columns[0], pinned: true },
+      { id: "extra", header: "Extra", pinned: true },
+    ];
+    render(
+      <DataTable
+        caption="People"
+        data={people}
+        getRowId={(row) => row.id}
+        columns={pinnedColumns}
+      />,
+    );
+
+    expect(screen.getByRole("columnheader", { name: /Name/ })).toHaveAttribute(
+      "data-pinned",
+    );
+    expect(screen.getByRole("cell", { name: "Abe" })).toHaveAttribute(
+      "data-pinned",
+    );
+    expect(
+      screen.getByRole("columnheader", { name: "Extra" }),
+    ).not.toHaveAttribute("data-pinned");
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('ignoring "extra"'),
+    );
+    warn.mockRestore();
   });
 });

@@ -74,9 +74,9 @@ export interface ColumnDef<TRow> {
    * In client mode, a sortable column without `getValue` can't be sorted and logs a dev warning.
    */
   sortable?: boolean;
-  /** Fixed width in px. A number, not a CSS string, because pinned `left` offsets and skeleton widths are computed from it. Default: browser auto-sizing. */
+  /** Fixed width in px. A number, not a CSS string, because skeleton widths are computed from it. Default: browser auto-sizing. */
   width?: number;
-  /** Pins the column to the left edge while the table scrolls horizontally. Default `false`. Requires `width` to compute its sticky offset. */
+  /** Pins the column to the left edge once it reaches it while the table scrolls horizontally. Any column can be pinned; only the first `pinned` column is used. Default `false`. */
   pinned?: boolean;
 }
 

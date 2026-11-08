@@ -69,6 +69,26 @@
   cursor: pointer;
 }
 
+/* The pinned column sticks to the left edge once it reaches it while the box scrolls sideways.
+   left: 0 works wherever the column is: earlier columns have scrolled out of view by then.
+   z-index keeps it above the cells passing underneath. */
+.pinned {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+/* Opaque, or the cells passing underneath would show through. .cell.pinned (not .pinned) so the
+   header keeps its own background; row hover still wins. */
+.cell.pinned {
+  background: var(--color-bg);
+}
+
+/* Only while it's stuck and cells pass underneath; set by DataTable's scroll handler. */
+.scroll[data-pinned-stuck="true"] .pinned {
+  box-shadow: var(--shadow-pinned-edge);
+}
+
 .sortButton:hover {
   color: var(--color-text);
 }

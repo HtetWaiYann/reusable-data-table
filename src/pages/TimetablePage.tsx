@@ -22,6 +22,8 @@ const columns: ColumnDef<ClassSession>[] = [
     getValue: (row) => row.startsAt,
     renderCell: (row) => timeFormat.format(row.startsAt),
     sortable: true,
+    width: 140,
+    pinned: true,
   },
   {
     id: "class",
