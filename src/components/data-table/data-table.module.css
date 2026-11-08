@@ -1,6 +1,8 @@
 /* Colours, spacing and sizes come from the design tokens in src/index.css. */
 
+/* position: relative so the refetch progress bar can sit on top of the table box without moving it. */
 .root {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -91,6 +93,89 @@
 
 .sortButton:hover {
   color: var(--color-text);
+}
+
+/* --- States --- */
+
+/* Empty and error rows: one full-width cell with room to breathe, so the table doesn't collapse. */
+.stateCell {
+  height: var(--state-min-height);
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+}
+
+.errorMessage {
+  margin: 0 0 var(--space-3);
+  color: var(--color-danger);
+}
+
+/* overflow: hidden clips the moving highlight to the bar. The vertical margin pads the bar to one
+   line of text (1lh), so skeleton rows are as tall as real rows and the table doesn't jump on load. */
+.skeletonBar {
+  position: relative;
+  display: block;
+  height: var(--skeleton-bar-height);
+  margin-block: calc((1lh - var(--skeleton-bar-height)) / 2);
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-skeleton);
+  background: var(--color-surface);
+}
+
+/* The shimmer moves with transform only, which the browser can animate without re-layout. */
+.skeletonBar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-border),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: shimmer var(--duration-shimmer) infinite;
+}
+
+/* Thin bar across the top of the table while a refetch runs; the rows stay visible below it. */
+.progressBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: var(--progress-bar-height);
+  overflow: hidden;
+  border-radius: var(--radius-2) var(--radius-2) 0 0;
+}
+
+.progressBar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-accent);
+  transform: translateX(-100%);
+  animation: shimmer var(--duration-shimmer) infinite;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Respect the OS setting: no motion. Skeleton bars stay plain grey; the progress bar becomes a still, full bar. */
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBar::after {
+    animation: none;
+  }
+
+  .progressBar::after {
+    animation: none;
+    transform: none;
+  }
 }
 
 /* --- Pagination --- */

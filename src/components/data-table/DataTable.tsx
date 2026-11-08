@@ -1,10 +1,12 @@
-import type { ReactElement, UIEvent } from "react";
+import type { ReactElement, ReactNode, UIEvent } from "react";
 import { usePagination } from "./hooks/usePagination.ts";
 import { usePinnedColumn } from "./hooks/usePinnedColumn.ts";
 import { useSorting } from "./hooks/useSorting.ts";
 import { Pagination } from "./Pagination.tsx";
+import { SkeletonRows } from "./SkeletonRows.tsx";
 import { TableHeader } from "./TableHeader.tsx";
 import { TableRow } from "./TableRow.tsx";
+import { EmptyRow, ErrorRow } from "./TableStates.tsx";
 import type { DataTableProps } from "./types.ts";
 import styles from "./data-table.module.css";
 
@@ -60,6 +62,10 @@ export function DataTable<TRow, TChild = never>(
     defaultPagination,
     onPaginationChange,
     pageSizeOptions,
+    isLoading = false,
+    error = null,
+    onRetry,
+    emptyState,
   } = props;
 
   const sorting = useSorting({
@@ -88,6 +94,42 @@ export function DataTable<TRow, TChild = never>(
 
   const pinnedColumnId = usePinnedColumn(columns);
 
+  // First load shows skeletons. A refetch keeps the current rows and shows a progress bar instead,
+  // so the table doesn't flash back to placeholders on every sort or page change in server mode.
+  const isFirstLoad = isLoading && data.length === 0;
+  const isRefetching = isLoading && !isFirstLoad;
+  // "Showing 0–0 of 0" would be wrong while loading or after a failure.
+  const showPagination = !isFirstLoad && !error;
+
+  function renderBody(): ReactNode {
+    if (isFirstLoad) {
+      return (
+        <SkeletonRows
+          columns={columns}
+          pinnedColumnId={pinnedColumnId}
+          rowCount={paging.pageSize}
+        />
+      );
+    }
+    if (error) {
+      return (
+        <ErrorRow colSpan={columns.length} message={error} onRetry={onRetry} />
+      );
+    }
+    if (paging.pageRows.length === 0) {
+      return <EmptyRow colSpan={columns.length} content={emptyState} />;
+    }
+    return paging.pageRows.map((row) => (
+      // Never use the index. After sorting, index keys would attach state to the wrong row.
+      <TableRow
+        key={getRowId(row)}
+        row={row}
+        columns={columns}
+        pinnedColumnId={pinnedColumnId}
+      />
+    ));
+  }
+
   function handleSort(columnId: string): void {
     sorting.toggleSort(columnId);
     // Back to page 1: page 3 of the old order would show unrelated rows.
@@ -98,9 +140,13 @@ export function DataTable<TRow, TChild = never>(
 
   return (
     <div className={styles.root}>
+      {/* Decorative: aria-busy on the table already tells screen readers it's loading. */}
+      {isRefetching && (
+        <div className={styles.progressBar} aria-hidden="true" />
+      )}
       {/* The wrapper scrolls, so a wide table never widens the page. */}
       <div className={styles.scroll} onScroll={handleScroll}>
-        <table className={styles.table}>
+        <table className={styles.table} aria-busy={isLoading}>
           <caption className={styles.caption}>
             <span className={styles.captionText}>{caption}</span>
           </caption>
@@ -110,28 +156,20 @@ export function DataTable<TRow, TChild = never>(
             pinnedColumnId={pinnedColumnId}
             onSort={handleSort}
           />
-          <tbody>
-            {paging.pageRows.map((row) => (
-              // Never use the index. After sorting, index keys would attach state to the wrong row.
-              <TableRow
-                key={getRowId(row)}
-                row={row}
-                columns={columns}
-                pinnedColumnId={pinnedColumnId}
-              />
-            ))}
-          </tbody>
+          <tbody>{renderBody()}</tbody>
         </table>
       </div>
-      <Pagination
-        pageIndex={paging.pageIndex}
-        pageSize={paging.pageSize}
-        pageCount={paging.pageCount}
-        rowCount={rowCount}
-        pageSizeOptions={paging.pageSizeOptions}
-        onPageIndexChange={paging.setPageIndex}
-        onPageSizeChange={paging.setPageSize}
-      />
+      {showPagination && (
+        <Pagination
+          pageIndex={paging.pageIndex}
+          pageSize={paging.pageSize}
+          pageCount={paging.pageCount}
+          rowCount={rowCount}
+          pageSizeOptions={paging.pageSizeOptions}
+          onPageIndexChange={paging.setPageIndex}
+          onPageSizeChange={paging.setPageSize}
+        />
+      )}
     </div>
   );
 }

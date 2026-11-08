@@ -15,6 +15,12 @@
   --radius-2: 8px;
   --font-size-sm: 13px;
   --shadow-pinned-edge: 4px 0 6px -4px rgb(0 0 0 / 20%);
+  --color-danger: #cf222e;
+  --state-min-height: 160px;
+  --skeleton-bar-height: 16px;
+  --radius-skeleton: 4px;
+  --progress-bar-height: 3px;
+  --duration-shimmer: 1.2s;
   --nav-width: 200px;
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
 

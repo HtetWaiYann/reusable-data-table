@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { DataTable, type ColumnDef } from "./index.ts";
+import { DataTable, type ColumnDef, type DataTableProps } from "./index.ts";
 
 interface Person {
   id: string;
@@ -189,5 +189,70 @@ describe("DataTable pinned column", () => {
       expect.stringContaining('ignoring "extra"'),
     );
     warn.mockRestore();
+  });
+});
+
+describe("DataTable states", () => {
+  // Only the fields these tests change; a Partial of the whole props type would lose the pagination-mode union.
+  type StateProps = Pick<
+    DataTableProps<Person>,
+    "data" | "isLoading" | "error" | "onRetry" | "emptyState"
+  >;
+
+  function renderWithState(props: Partial<StateProps> = {}) {
+    return render(
+      <DataTable
+        caption="People"
+        data={[]}
+        getRowId={(row) => row.id}
+        columns={columns}
+        {...props}
+      />,
+    );
+  }
+
+  it("shows a page of skeleton rows on the first load, and no pagination", () => {
+    const { container } = renderWithState({ isLoading: true });
+
+    expect(screen.getByRole("table")).toHaveAttribute("aria-busy", "true");
+    expect(container.querySelectorAll("tbody tr[aria-hidden]")).toHaveLength(
+      10,
+    );
+    expect(
+      screen.queryByRole("navigation", { name: "Pagination" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the rows visible while refetching", () => {
+    renderWithState({ data: people, isLoading: true });
+
+    expect(screen.getByRole("table")).toHaveAttribute("aria-busy", "true");
+    expect(firstColumn()).toEqual(["Cara", "Abe", "Ben"]);
+  });
+
+  it("shows the error with a Retry button and keeps the header", async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
+    renderWithState({ error: "Couldn't load people.", onRetry });
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Couldn't load people.",
+    );
+    expect(screen.getByRole("columnheader", { name: /Name/ })).toBeVisible();
+    expect(
+      screen.queryByRole("navigation", { name: "Pagination" }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it("shows the default empty message, or custom empty content", () => {
+    const { unmount } = renderWithState();
+    expect(screen.getByRole("cell", { name: "No results." })).toBeVisible();
+    unmount();
+
+    renderWithState({ emptyState: <strong>No classes this week</strong> });
+    expect(screen.getByText("No classes this week")).toBeVisible();
   });
 });
