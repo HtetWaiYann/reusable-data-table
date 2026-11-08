@@ -4,7 +4,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getMembers } from "../mocks/members.ts";
 import { classSessions } from "../mocks/timetable.ts";
-import DashboardPage from "./DashboardPage.tsx";
+import DemoPage from "./DemoPage.tsx";
 
 const LATENCY_MS = 800;
 
@@ -20,10 +20,10 @@ async function finishRequest(): Promise<void> {
   await act(() => vi.advanceTimersByTimeAsync(LATENCY_MS));
 }
 
-async function renderLoadedPage(path = "/"): Promise<void> {
+async function renderLoadedPage(path = "/demo"): Promise<void> {
   render(
     <MemoryRouter initialEntries={[path]}>
-      <DashboardPage />
+      <DemoPage />
     </MemoryRouter>,
   );
   await finishRequest();
@@ -37,7 +37,7 @@ function mainRows(): HTMLElement[] {
   return bodyRows;
 }
 
-describe("DashboardPage", () => {
+describe("DemoPage", () => {
   it("shows the timetable's first page, earliest class first", async () => {
     await renderLoadedPage();
     const earliest = classSessions.toSorted(
@@ -71,7 +71,7 @@ describe("DashboardPage", () => {
 
   it("loads child rows on demand in lazy mode", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await renderLoadedPage("/?children=lazy");
+    await renderLoadedPage("/demo?children=lazy");
 
     expect(screen.getByRole("radio", { name: /Lazy/ })).toBeChecked();
     await user.click(screen.getAllByRole("button", { name: "Details" })[0]);
@@ -82,7 +82,7 @@ describe("DashboardPage", () => {
   });
 
   it("renders the second dataset with the same table", async () => {
-    await renderLoadedPage("/?dataset=members");
+    await renderLoadedPage("/demo?dataset=members");
 
     expect(screen.getByRole("heading", { name: "Members" })).toBeVisible();
     expect(screen.getByRole("columnheader", { name: /Plan/ })).toBeVisible();
@@ -102,7 +102,7 @@ describe("DashboardPage", () => {
 
   it("server mode: a sort click fetches page 1 again, keeping rows visible meanwhile", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await renderLoadedPage("/?mode=server");
+    await renderLoadedPage("/demo?mode=server");
 
     expect(
       screen.getByText(`Showing 1–10 of ${classSessions.length}`),

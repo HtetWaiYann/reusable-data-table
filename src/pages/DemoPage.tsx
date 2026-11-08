@@ -23,12 +23,13 @@ const DESCRIPTIONS: Record<Dataset, string> = {
 };
 
 /**
- * Route "/": the only page. The control panel switches dataset and modes; the options live in the
- * URL, so every setup can be shared or bookmarked.
+ * Route "/demo": the table playground. The control panel switches dataset and modes (second
+ * dataset, server mode, lazy or built-in child rows, large data, API scenarios); the options live
+ * in the URL, so every setup can be shared or bookmarked.
  *
  * @returns The page content.
  */
-export default function DashboardPage(): ReactElement {
+export default function DemoPage(): ReactElement {
   const [searchParams, setSearchParams] = useSearchParams();
   const options = parseShowcaseOptions(searchParams);
 
@@ -43,6 +44,9 @@ export default function DashboardPage(): ReactElement {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
+        <p className="text-sm font-medium text-zinc-500">
+          Table playground · one component, every configuration
+        </p>
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           {TITLES[options.dataset]}
         </h1>

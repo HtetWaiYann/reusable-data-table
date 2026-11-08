@@ -1,7 +1,8 @@
 import { TableCellsIcon } from "@heroicons/react/20/solid";
 import type { ReactElement } from "react";
 import { Navigate, NavLink, Route, Routes } from "react-router-dom";
-import DashboardPage from "./pages/DashboardPage.tsx";
+import DemoPage from "./pages/DemoPage.tsx";
+import TimetablePage from "./pages/TimetablePage.tsx";
 
 // Active link gets a filled background; NavLink passes isActive and sets aria-current="page" itself.
 function navLinkClass({ isActive }: { isActive: boolean }): string {
@@ -14,7 +15,7 @@ function navLinkClass({ isActive }: { isActive: boolean }): string {
 
 /**
  * App shell: a top bar with the product name and navigation, then the routed page.
- * A top bar instead of a sidebar: with one page a sidebar only takes width from the table, and a
+ * A top bar instead of a sidebar: with two pages a sidebar only takes width from the table, and a
  * top bar needs no separate mobile layout.
  *
  * @returns The layout with the route matching the current URL.
@@ -37,17 +38,21 @@ export default function App(): ReactElement {
             </span>
             Studio
           </span>
-          <nav aria-label="Main">
+          <nav aria-label="Main" className="flex items-center gap-1">
             <NavLink to="/" end className={navLinkClass}>
-              Dashboard
+              Timetable
+            </NavLink>
+            <NavLink to="/demo" className={navLinkClass}>
+              Demo
             </NavLink>
           </nav>
         </div>
       </header>
       <main id="main" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          {/* One page: every scenario is an option on it. Unknown paths (e.g. an old /demo link) go home. */}
+          <Route path="/" element={<TimetablePage />} />
+          <Route path="/demo" element={<DemoPage />} />
+          {/* Unknown paths go to the timetable instead of a blank page. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
