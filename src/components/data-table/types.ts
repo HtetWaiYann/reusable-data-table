@@ -154,6 +154,8 @@ interface DataTableBaseProps<TRow, TChild> {
   getRowId: (row: TRow) => string;
   /** Accessible name of the table, rendered as `<caption>`. Required for screen readers; can be visually hidden with CSS. */
   caption: string;
+  /** Extra class on the table's root, added after the table's own. Use it to set `--dt-*` tokens or override styles (e.g. with Tailwind). */
+  className?: string;
 
   // Columns
   /** Column definitions, in display order. Pinned columns should come first, since they stick to the left edge. */

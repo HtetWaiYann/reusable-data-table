@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
+import { AlertIcon } from "./icons.tsx";
 import styles from "./data-table.module.css";
 
 const DEFAULT_EMPTY_STATE = "No results.";
@@ -18,7 +19,9 @@ export function EmptyRow({ colSpan, content }: EmptyRowProps): ReactElement {
   return (
     <tr>
       <td colSpan={colSpan} className={styles.stateCell}>
-        {content ?? DEFAULT_EMPTY_STATE}
+        <div className={styles.stateContent}>
+          {content ?? DEFAULT_EMPTY_STATE}
+        </div>
       </td>
     </tr>
   );
@@ -46,15 +49,20 @@ export function ErrorRow({
   return (
     <tr>
       <td colSpan={colSpan} className={styles.stateCell}>
-        {/* role="alert" so screen readers announce the error without the user having to find it. */}
-        <p role="alert" className={styles.errorMessage}>
-          {message}
-        </p>
-        {onRetry && (
-          <button type="button" className={styles.button} onClick={onRetry}>
-            Retry
-          </button>
-        )}
+        <div className={styles.stateContent}>
+          <span className={styles.stateIcon}>
+            <AlertIcon />
+          </span>
+          {/* role="alert" so screen readers announce the error without the user having to find it. */}
+          <p role="alert" className={styles.errorMessage}>
+            {message}
+          </p>
+          {onRetry && (
+            <button type="button" className={styles.button} onClick={onRetry}>
+              Retry
+            </button>
+          )}
+        </div>
       </td>
     </tr>
   );

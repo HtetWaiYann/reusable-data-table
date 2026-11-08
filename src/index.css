@@ -1,73 +1,27 @@
-/* Design tokens. The table and pages read colours and spacing from here, never hard-coded values. */
-:root {
-  --color-text: #1f2328;
-  --color-text-muted: #656d76;
-  --color-bg: #ffffff;
-  --color-surface: #f6f8fa;
-  --color-border: #d0d7de;
-  --color-accent: #0969da;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --radius-1: 6px;
-  --radius-2: 8px;
-  --font-size-sm: 13px;
-  --shadow-pinned-edge: 4px 0 6px -4px rgb(0 0 0 / 20%);
-  --color-danger: #cf222e;
-  --state-min-height: 160px;
-  --skeleton-bar-height: 16px;
-  --radius-skeleton: 4px;
-  --progress-bar-height: 3px;
-  --duration-shimmer: 1.2s;
-  --duration-expand: 200ms;
-  --toggle-column-width: 40px;
-  --nav-width: 200px;
-  --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
+/* Layer order: the table's own CSS (data-table) sits above Tailwind's reset but below utilities,
+   so a utility class or any unlayered CSS overrides the table without !important. Must come before
+   the import: the first time a layer is named fixes its place in the order. */
+@layer theme, base, data-table, components, utilities;
+@import "tailwindcss";
 
-  font: 15px/1.5 var(--font-sans);
-  color: var(--color-text);
-  background: var(--color-bg);
+/* App tokens. One gray family (zinc, from Tailwind) and one accent. The table has its own --dt-*
+   tokens with matching defaults; see data-table.module.css. */
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --color-accent: #0f766e;
+  --color-accent-hover: #115e59;
+  --ease-out-soft: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+@layer base {
+  :root {
+    color: var(--color-zinc-900);
+    background: var(--color-zinc-50);
+    -webkit-font-smoothing: antialiased;
+  }
 
-body {
-  margin: 0;
-}
-
-.app-shell {
-  display: grid;
-  grid-template-columns: var(--nav-width) 1fr;
-  min-height: 100vh;
-}
-
-.app-nav {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4);
-  background: var(--color-surface);
-  border-right: 1px solid var(--color-border);
-}
-
-.app-nav a {
-  color: var(--color-text-muted);
-  text-decoration: none;
-}
-
-.app-nav a[aria-current="page"] {
-  color: var(--color-accent);
-  font-weight: 600;
-}
-
-/* min-width: 0 lets the grid column shrink, so a wide table scrolls inside its own wrapper instead of widening the page. */
-.app-main {
-  min-width: 0;
-  padding: var(--space-6);
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
 }

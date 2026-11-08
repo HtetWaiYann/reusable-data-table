@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "./icons.tsx";
 import { getRowRange } from "./utils/pagination.ts";
 import styles from "./data-table.module.css";
 
@@ -39,7 +40,9 @@ export function Pagination({
   return (
     <nav aria-label="Pagination" className={styles.pagination}>
       <p className={styles.summary}>
-        Showing {from}–{to} of {rowCount}
+        {/* toLocaleString: "50,000", not "50000". */}
+        Showing {from.toLocaleString()}–{to.toLocaleString()} of{" "}
+        {rowCount.toLocaleString()}
       </p>
       <div className={styles.pageControls}>
         <button
@@ -48,6 +51,7 @@ export function Pagination({
           disabled={isFirstPage}
           onClick={() => onPageIndexChange(pageIndex - 1)}
         >
+          <ChevronLeftIcon />
           Previous
         </button>
         {/* Users count pages from 1. */}
@@ -61,6 +65,7 @@ export function Pagination({
           onClick={() => onPageIndexChange(pageIndex + 1)}
         >
           Next
+          <ChevronRightIcon />
         </button>
       </div>
       <label className={styles.pageSize}>

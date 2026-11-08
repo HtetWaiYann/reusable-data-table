@@ -1,5 +1,6 @@
 import { memo, type ReactElement } from "react";
 import { getCellProps } from "./cellProps.ts";
+import { ChevronRightIcon } from "./icons.tsx";
 import { ExpandedRow } from "./ExpandedRow.tsx";
 import type { LazyChildrenEntry } from "./hooks/useLazyChildren.ts";
 import type { ColumnDef, ExpansionConfig } from "./types.ts";
@@ -55,7 +56,7 @@ function TableRowComponent<TRow, TChild>({
                 aria-controls={isDetailMounted ? detailId : undefined}
                 onClick={() => onToggle(row, rowId)}
               >
-                <span aria-hidden="true">▸</span>
+                <ChevronRightIcon />
               </button>
             )}
           </td>

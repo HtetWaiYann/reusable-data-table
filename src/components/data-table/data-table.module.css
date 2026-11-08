@@ -1,344 +1,490 @@
-/* Colours, spacing and sizes come from the design tokens in src/index.css. */
+/* Everything sits in the "data-table" cascade layer. Layered rules lose to unlayered CSS and to
+   later layers (Tailwind's utilities), so consumers can restyle the table with a plain class
+   instead of fighting specificity or reaching for !important.
+   See https://developer.mozilla.org/en-US/docs/Web/CSS/@layer */
+@layer data-table {
+  /* --- Tokens ---
+     The table's whole look comes from these custom properties. Override any of them on the
+     table's className, e.g. `.my-table { --dt-accent: rebeccapurple; }`. */
+  .root {
+    --dt-bg: #ffffff;
+    --dt-surface: #fafafa;
+    --dt-hover: #f4f4f5;
+    --dt-pressed: #e4e4e7;
+    --dt-border: #e4e4e7;
+    --dt-text: #18181b;
+    --dt-text-muted: #71717a;
+    --dt-accent: #0f766e;
+    --dt-danger: #b91c1c;
+    --dt-danger-surface: #fef2f2;
+    --dt-radius: 12px;
+    --dt-radius-control: 8px;
+    --dt-radius-small: 4px;
+    --dt-space-1: 4px;
+    --dt-space-2: 8px;
+    --dt-space-3: 12px;
+    --dt-space-4: 16px;
+    --dt-space-6: 24px;
+    --dt-font-size: 14px;
+    --dt-font-size-header: 12px;
+    --dt-icon-size: 16px;
+    --dt-control-height: 32px;
+    --dt-state-min-height: 192px;
+    --dt-skeleton-bar-height: 12px;
+    --dt-progress-bar-height: 2px;
+    --dt-toggle-column-width: 44px;
+    --dt-shadow: 0 1px 2px rgb(24 24 27 / 5%);
+    --dt-shadow-pinned: 6px 0 8px -6px rgb(24 24 27 / 18%);
+    --dt-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --dt-duration-fast: 150ms;
+    --dt-duration-expand: 300ms;
+    --dt-duration-pulse: 1s;
+    --dt-duration-progress: 1.2s;
+    --dt-refetch-opacity: 0.55;
 
-/* position: relative so the refetch progress bar can sit on top of the table box without moving it. */
-.root {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-/* --- Table --- */
-
-/* The wrapper scrolls, so a wide table never widens the page. It's also a size container, so
-   expanded content can match the visible width (100cqi) rather than the full scrollable table. */
-.scroll {
-  container-type: inline-size;
-  overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-2);
-  background: var(--color-bg);
-}
-
-/* separate, not collapse: collapsed borders don't stay attached to sticky cells (pinned column, later). */
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.caption {
-  padding: var(--space-3) var(--space-4);
-  text-align: left;
-  font-weight: 600;
-}
-
-/* The text is sticky, not the <caption>: browsers ignore sticky on the caption itself, and without
-   this the title scrolls out of view with a wide table. */
-.captionText {
-  position: sticky;
-  left: var(--space-4);
-}
-
-/* nowrap: on narrow screens the table scrolls sideways instead of breaking "Mon 6:00 AM" over three lines. */
-.headerCell,
-.cell {
-  padding: var(--space-2) var(--space-4);
-  text-align: left;
-  white-space: nowrap;
-  border-top: 1px solid var(--color-border);
-}
-
-.headerCell {
-  background: var(--color-surface);
-  color: var(--color-text-muted);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-}
-
-.row:hover .cell {
-  background: var(--color-surface);
-}
-
-/* Reset the button so a sortable header looks like the others. */
-.sortButton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-/* The pinned column sticks to the left edge once it reaches it while the box scrolls sideways.
-   left: 0 works wherever the column is: earlier columns have scrolled out of view by then.
-   z-index keeps it above the cells passing underneath. */
-.pinned {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-}
-
-/* Opaque, or the cells passing underneath would show through. .cell.pinned (not .pinned) so the
-   header keeps its own background; row hover still wins. */
-.cell.pinned {
-  background: var(--color-bg);
-}
-
-/* Only while it's stuck and cells pass underneath; set by DataTable's scroll handler. */
-.scroll[data-pinned-stuck="true"] .pinned {
-  box-shadow: var(--shadow-pinned-edge);
-}
-
-.sortButton:hover {
-  color: var(--color-text);
-}
-
-/* --- States --- */
-
-/* Empty and error rows: one full-width cell with room to breathe, so the table doesn't collapse. */
-.stateCell {
-  height: var(--state-min-height);
-  padding: var(--space-4);
-  text-align: center;
-  color: var(--color-text-muted);
-  border-top: 1px solid var(--color-border);
-}
-
-.errorMessage {
-  margin: 0 0 var(--space-3);
-  color: var(--color-danger);
-}
-
-/* overflow: hidden clips the moving highlight to the bar. The vertical margin pads the bar to one
-   line of text (1lh), so skeleton rows are as tall as real rows and the table doesn't jump on load. */
-.skeletonBar {
-  position: relative;
-  display: block;
-  height: var(--skeleton-bar-height);
-  margin-block: calc((1lh - var(--skeleton-bar-height)) / 2);
-  width: 100%;
-  overflow: hidden;
-  border-radius: var(--radius-skeleton);
-  background: var(--color-surface);
-}
-
-/* The shimmer moves with transform only, which the browser can animate without re-layout. */
-.skeletonBar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--color-border),
-    transparent
-  );
-  transform: translateX(-100%);
-  animation: shimmer var(--duration-shimmer) infinite;
-}
-
-/* Thin bar across the top of the table while a refetch runs; the rows stay visible below it. */
-.progressBar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  height: var(--progress-bar-height);
-  overflow: hidden;
-  border-radius: var(--radius-2) var(--radius-2) 0 0;
-}
-
-.progressBar::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--color-accent);
-  transform: translateX(-100%);
-  animation: shimmer var(--duration-shimmer) infinite;
-}
-
-@keyframes shimmer {
-  to {
-    transform: translateX(100%);
-  }
-}
-
-/* Respect the OS setting: no motion. Skeleton bars stay plain grey; the progress bar becomes a still, full bar. */
-@media (prefers-reduced-motion: reduce) {
-  .detailCollapse,
-  .toggleButton > span {
-    transition: none;
+    /* position: relative so the refetch progress bar can sit on top of the table box without moving it. */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--dt-space-3);
+    color: var(--dt-text);
+    font-size: var(--dt-font-size);
   }
 
-  .skeletonBar::after {
-    animation: none;
+  /* --- Table --- */
+
+  /* The wrapper scrolls, so a wide table never widens the page. It's also a size container, so
+     expanded content can match the visible width (100cqi) rather than the full scrollable table. */
+  .scroll {
+    container-type: inline-size;
+    overflow-x: auto;
+    border: 1px solid var(--dt-border);
+    border-radius: var(--dt-radius);
+    background: var(--dt-bg);
+    box-shadow: var(--dt-shadow);
+  }
+
+  /* separate, not collapse: collapsed borders don't stay attached to sticky cells (the pinned column). */
+  .table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .caption {
+    padding: var(--dt-space-4);
+    text-align: left;
+    font-weight: 600;
+  }
+
+  /* The text is sticky, not the <caption>: browsers ignore sticky on the caption itself, and without
+     this the title scrolls out of view with a wide table. */
+  .captionText {
+    position: sticky;
+    left: var(--dt-space-4);
+  }
+
+  /* nowrap: on narrow screens the table scrolls sideways instead of breaking "Mon 6:00 AM" over three lines.
+     tabular-nums: digits share one width, so numbers line up down a column. */
+  .headerCell,
+  .cell {
+    padding: var(--dt-space-3) var(--dt-space-4);
+    text-align: left;
+    white-space: nowrap;
+    border-top: 1px solid var(--dt-border);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .headerCell {
+    padding-block: var(--dt-space-2);
+    background: var(--dt-surface);
+    color: var(--dt-text-muted);
+    font-size: var(--dt-font-size-header);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .cell {
+    transition: background-color var(--dt-duration-fast) var(--dt-ease);
+  }
+
+  .row:hover .cell {
+    background: var(--dt-surface);
+  }
+
+  /* Dims the old rows while a server-side sort or page loads, then fades the new ones in:
+     the order change reads as one smooth step instead of a jump. */
+  .body {
+    transition: opacity var(--dt-duration-fast) var(--dt-ease);
+  }
+
+  .body[data-refetching="true"] {
+    opacity: var(--dt-refetch-opacity);
+  }
+
+  /* The negative margin lets the hover background reach past the text without shifting it, so
+     the header row keeps the same height as plain headers. */
+  .sortButton {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dt-space-1);
+    margin: calc(-1 * var(--dt-space-1)) calc(-1 * var(--dt-space-2));
+    padding: var(--dt-space-1) var(--dt-space-2);
+    border: 0;
+    border-radius: var(--dt-radius-control);
+    background: none;
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    cursor: pointer;
+    transition:
+      background-color var(--dt-duration-fast) var(--dt-ease),
+      color var(--dt-duration-fast) var(--dt-ease);
+  }
+
+  .sortButton:hover {
+    background: var(--dt-hover);
+    color: var(--dt-text);
+  }
+
+  .sortButton:active {
+    background: var(--dt-pressed);
+  }
+
+  .sortIcon {
+    width: var(--dt-icon-size);
+    height: var(--dt-icon-size);
+    flex: none;
+  }
+
+  /* Unsorted columns show a faint hint that they can be sorted; it strengthens on hover. */
+  .sortIcon[data-direction="none"] {
+    opacity: 0.4;
+    transition: opacity var(--dt-duration-fast) var(--dt-ease);
+  }
+
+  .sortButton:hover .sortIcon[data-direction="none"] {
+    opacity: 1;
+  }
+
+  th[aria-sort] .sortButton {
+    color: var(--dt-text);
+  }
+
+  /* The pinned column sticks to the left edge once it reaches it while the box scrolls sideways.
+     left: 0 works wherever the column is: earlier columns have scrolled out of view by then.
+     z-index keeps it above the cells passing underneath. */
+  .pinned {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
+
+  /* Opaque, or the cells passing underneath would show through. .cell.pinned (not .pinned) so the
+     header keeps its own background; row hover still wins. */
+  .cell.pinned {
+    background: var(--dt-bg);
+    font-weight: 500;
+  }
+
+  .row:hover .cell.pinned {
+    background: var(--dt-surface);
+  }
+
+  /* Only while it's stuck and cells pass underneath; set by DataTable's scroll handler. */
+  .scroll[data-pinned-stuck="true"] .pinned {
+    box-shadow: var(--dt-shadow-pinned);
+  }
+
+  /* --- States --- */
+
+  /* Empty and error rows: one full-width cell with room to breathe, so the table doesn't collapse. */
+  .stateCell {
+    height: var(--dt-state-min-height);
+    padding: 0;
+    text-align: center;
+    color: var(--dt-text-muted);
+    border-top: 1px solid var(--dt-border);
+  }
+
+  /* Centred in the visible box, not the whole table: on a narrow screen the cell is as wide as all
+     columns, so plain centring put the message off screen (same fix as .detailContent). */
+  .stateContent {
+    position: sticky;
+    left: 0;
+    box-sizing: border-box;
+    width: 100cqi;
+    padding: var(--dt-space-6) var(--dt-space-4);
+  }
+
+  .stateIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--dt-control-height);
+    height: var(--dt-control-height);
+    margin-bottom: var(--dt-space-3);
+    border-radius: var(--dt-radius-control);
+    background: var(--dt-danger-surface);
+    color: var(--dt-danger);
+  }
+
+  .stateIcon > svg {
+    width: var(--dt-icon-size);
+    height: var(--dt-icon-size);
+  }
+
+  .errorMessage {
+    margin: 0 0 var(--dt-space-4);
+    color: var(--dt-text);
+    font-weight: 500;
+  }
+
+  /* The vertical margin pads the bar to one line of text (1lh), so skeleton rows are as tall as
+     real rows and the table doesn't jump on load. */
+  .skeletonBar {
+    display: block;
+    height: var(--dt-skeleton-bar-height);
+    margin-block: calc((1lh - var(--dt-skeleton-bar-height)) / 2);
+    width: 100%;
+    border-radius: var(--dt-radius-small);
+    background: var(--dt-hover);
+    animation: pulse var(--dt-duration-pulse) var(--dt-ease) infinite alternate;
+  }
+
+  /* Opacity only: the browser animates it without re-layout or repaint of the row. */
+  @keyframes pulse {
+    to {
+      opacity: 0.45;
+    }
+  }
+
+  /* Thin bar across the top of the table while a refetch runs; the rows stay visible below it. */
+  .progressBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: var(--dt-progress-bar-height);
+    overflow: hidden;
+    border-radius: var(--dt-radius) var(--dt-radius) 0 0;
   }
 
   .progressBar::after {
-    animation: none;
-    transform: none;
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--dt-accent);
+    transform: translateX(-100%);
+    animation: progress var(--dt-duration-progress) var(--dt-ease) infinite;
   }
-}
 
-/* --- Expansion --- */
+  @keyframes progress {
+    to {
+      transform: translateX(100%);
+    }
+  }
 
-.toggleCell {
-  width: var(--toggle-column-width);
-  padding-right: 0;
-}
+  /* --- Expansion --- */
 
-/* Exactly one text line tall (1lh) and no padding, so rows with a toggle stay the same height
-   as skeleton rows; otherwise the table would jump when data loads (see step 12b). */
-.toggleButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1lh;
-  height: 1lh;
-  padding: 0;
-  vertical-align: top;
-  border: 0;
-  border-radius: var(--radius-1);
-  background: none;
-  color: var(--color-text-muted);
-  font: inherit;
-  cursor: pointer;
-}
+  .toggleCell {
+    width: var(--dt-toggle-column-width);
+    padding-right: 0;
+  }
 
-.toggleButton:hover {
-  background: var(--color-surface);
-  color: var(--color-text);
-}
+  /* Exactly one text line tall (1lh) and no padding, so rows with a toggle stay the same height
+     as skeleton rows; otherwise the table would jump when data loads (see step 12b). */
+  .toggleButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1lh;
+    height: 1lh;
+    padding: 0;
+    vertical-align: top;
+    border: 0;
+    border-radius: var(--dt-radius-small);
+    background: none;
+    color: var(--dt-text-muted);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      background-color var(--dt-duration-fast) var(--dt-ease),
+      color var(--dt-duration-fast) var(--dt-ease);
+  }
 
-/* The arrow turns to point down when open. */
-.toggleButton > span {
-  transition: transform var(--duration-expand);
-}
+  .toggleButton:hover {
+    background: var(--dt-pressed);
+    color: var(--dt-text);
+  }
 
-.toggleButton[aria-expanded="true"] > span {
-  transform: rotate(90deg);
-}
+  /* The chevron turns to point down when open. */
+  .toggleButton > svg {
+    width: var(--dt-icon-size);
+    height: var(--dt-icon-size);
+    transition: transform var(--dt-duration-expand) var(--dt-ease);
+  }
 
-/* No border or padding on the cell itself, so a closed detail row is truly 0 px tall. */
-.detailCell {
-  padding: 0;
-}
+  .toggleButton[aria-expanded="true"] > svg {
+    transform: rotate(90deg);
+  }
 
-.detailRow[data-open="true"] > .detailCell {
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
+  /* No border or padding on the cell itself, so a closed detail row is truly 0 px tall. */
+  .detailCell {
+    padding: 0;
+  }
 
-/* Animating grid-template-rows from 0fr to 1fr reaches the content's natural height,
-   which height: auto can't be animated to. */
-.detailCollapse {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--duration-expand) ease;
-}
+  .detailRow[data-open="true"] > .detailCell {
+    border-top: 1px solid var(--dt-border);
+    background: var(--dt-surface);
+  }
 
-.detailRow[data-open="true"] .detailCollapse {
-  grid-template-rows: 1fr;
-}
-
-/* The first open mounts the row already open, so there's no "before" value to transition from.
-   @starting-style supplies one (0fr). Older browsers just open instantly. */
-@starting-style {
-  .detailRow[data-open="true"] .detailCollapse {
+  /* Animating grid-template-rows from 0fr to 1fr reaches the content's natural height,
+     which height: auto can't be animated to. */
+  .detailCollapse {
+    display: grid;
     grid-template-rows: 0fr;
+    transition: grid-template-rows var(--dt-duration-expand) var(--dt-ease);
   }
-}
 
-/* min-height: 0 lets the grid row shrink below the content's height; overflow hides the rest. */
-.detailClip {
-  min-height: 0;
-  overflow: hidden;
-}
+  .detailRow[data-open="true"] .detailCollapse {
+    grid-template-rows: 1fr;
+  }
 
-/* As wide as the visible box (100cqi), not the whole table, and sticky, so the details stay in
-   view when a wide table is scrolled sideways (same idea as the caption). */
-.detailContent {
-  position: sticky;
-  left: 0;
-  box-sizing: border-box;
-  width: 100cqi;
-  padding: var(--space-3) var(--space-4);
-}
+  /* The first open mounts the row already open, so there's no "before" value to transition from.
+     @starting-style supplies one (0fr). Older browsers just open instantly. */
+  @starting-style {
+    .detailRow[data-open="true"] .detailCollapse {
+      grid-template-rows: 0fr;
+    }
+  }
 
-/* Hidden on screen but still read by screen readers. */
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
+  /* min-height: 0 lets the grid row shrink below the content's height; overflow hides the rest. */
+  .detailClip {
+    min-height: 0;
+    overflow: hidden;
+  }
 
-/* --- Pagination --- */
+  /* As wide as the visible box (100cqi), not the whole table, and sticky, so the details stay in
+     view when a wide table is scrolled sideways (same idea as the caption). */
+  .detailContent {
+    position: sticky;
+    left: 0;
+    box-sizing: border-box;
+    width: 100cqi;
+    padding: var(--dt-space-3) var(--dt-space-4) var(--dt-space-4);
+  }
 
-.pagination {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
-  font-size: var(--font-size-sm);
-}
+  /* Hidden on screen but still read by screen readers. */
+  .visuallyHidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 
-/* Pushes the controls to the right; they wrap under it on narrow screens. */
-.summary {
-  margin: 0 auto 0 0;
-  color: var(--color-text-muted);
-}
+  /* --- Pagination --- */
 
-.pageControls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dt-space-2) var(--dt-space-4);
+    color: var(--dt-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
 
-.button,
-.select {
-  padding: var(--space-1) var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-1);
-  background: var(--color-bg);
-  font: inherit;
-  color: inherit;
-}
+  /* Pushes the controls to the right; they wrap under it on narrow screens. */
+  .summary {
+    margin: 0 auto 0 0;
+  }
 
-.button {
-  cursor: pointer;
-}
+  .pageControls {
+    display: flex;
+    align-items: center;
+    gap: var(--dt-space-2);
+  }
 
-.button:hover:not(:disabled) {
-  background: var(--color-surface);
-}
+  .button,
+  .select {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dt-space-1);
+    height: var(--dt-control-height);
+    padding: 0 var(--dt-space-3);
+    border: 1px solid var(--dt-border);
+    border-radius: var(--dt-radius-control);
+    background: var(--dt-bg);
+    box-shadow: var(--dt-shadow);
+    font: inherit;
+    font-weight: 500;
+    color: var(--dt-text);
+    transition:
+      background-color var(--dt-duration-fast) var(--dt-ease),
+      transform var(--dt-duration-fast) var(--dt-ease);
+  }
 
-.button:disabled {
-  color: var(--color-text-muted);
-  background: var(--color-surface);
-  cursor: not-allowed;
-}
+  .button {
+    cursor: pointer;
+  }
 
-.pageSize {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
+  .button > svg {
+    width: var(--dt-icon-size);
+    height: var(--dt-icon-size);
+  }
 
-/* --- Focus --- */
+  .button:hover:not(:disabled) {
+    background: var(--dt-hover);
+  }
 
-/* :focus-visible shows the ring for keyboard users only, not on mouse clicks. */
-.toggleButton:focus-visible,
-.sortButton:focus-visible,
-.button:focus-visible,
-.select:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+  /* A 1px press gives a physical click feel without moving the layout. */
+  .button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .button:disabled {
+    opacity: 0.5;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .pageSize {
+    display: flex;
+    align-items: center;
+    gap: var(--dt-space-2);
+  }
+
+  /* --- Focus --- */
+
+  /* :focus-visible shows the ring for keyboard users only, not on mouse clicks. */
+  .toggleButton:focus-visible,
+  .sortButton:focus-visible,
+  .button:focus-visible,
+  .select:focus-visible {
+    outline: 2px solid var(--dt-accent);
+    outline-offset: 2px;
+  }
+
+  /* --- Reduced motion --- */
+
+  /* Respect the OS setting: no motion. Skeleton bars stay still; the progress bar becomes a still, full bar. */
+  @media (prefers-reduced-motion: reduce) {
+    .detailCollapse,
+    .toggleButton > svg,
+    .body {
+      transition: none;
+    }
+
+    .skeletonBar {
+      animation: none;
+    }
+
+    .progressBar::after {
+      animation: none;
+      transform: none;
+    }
+  }
 }

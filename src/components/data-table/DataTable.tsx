@@ -1,6 +1,7 @@
 import {
   useCallback,
   useId,
+  useRef,
   type ReactElement,
   type ReactNode,
   type UIEvent,
@@ -36,6 +37,27 @@ function handleScroll(event: UIEvent<HTMLDivElement>): void {
   box.dataset.pinnedStuck = String(box.scrollLeft > restingLeft);
 }
 
+// Short on purpose: it marks that the order changed without slowing down repeated sorting.
+const SORT_FADE_MS = 200;
+const SORT_FADE_EASING = "cubic-bezier(0.32, 0.72, 0, 1)";
+
+// Fades the rows in after a client-side sort, so the new order reads as a change rather than a jump.
+// Web Animations API from the click handler: no extra state or re-render. Skipped when the user
+// prefers reduced motion, and in jsdom (tests), which has neither animate() nor matchMedia.
+// See https://developer.mozilla.org/en-US/docs/Web/API/Element/animate
+function playSortFade(body: HTMLTableSectionElement | null): void {
+  if (!body || typeof body.animate !== "function") {
+    return;
+  }
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+  body.animate([{ opacity: 0.4 }, { opacity: 1 }], {
+    duration: SORT_FADE_MS,
+    easing: SORT_FADE_EASING,
+  });
+}
+
 /**
  * A reusable data table
  *
@@ -61,6 +83,7 @@ export function DataTable<TRow, TChild = never>(
     data,
     getRowId,
     caption,
+    className,
     columns,
     sort,
     defaultSort,
@@ -102,6 +125,9 @@ export function DataTable<TRow, TChild = never>(
   });
 
   const pinnedColumnId = usePinnedColumn(columns);
+
+  // The <tbody>, for the sort fade.
+  const bodyRef = useRef<HTMLTableSectionElement>(null);
 
   // --- Expansion ---
   const detailIdPrefix = useId();
@@ -176,6 +202,10 @@ export function DataTable<TRow, TChild = never>(
 
   function handleSort(columnId: string): void {
     sorting.toggleSort(columnId);
+    // Server mode fades through data-refetching instead, once the new page arrives.
+    if (!manualSorting) {
+      playSortFade(bodyRef.current);
+    }
     // Back to page 1: page 3 of the old order would show unrelated rows.
     if (paging.pageIndex !== 0) {
       paging.setPageIndex(0);
@@ -183,7 +213,8 @@ export function DataTable<TRow, TChild = never>(
   }
 
   return (
-    <div className={styles.root}>
+    // The consumer's class comes after ours, so it can set --dt-* tokens or override any rule.
+    <div className={className ? `${styles.root} ${className}` : styles.root}>
       {/* Decorative: aria-busy on the table already tells screen readers it's loading. */}
       {isRefetching && (
         <div className={styles.progressBar} aria-hidden="true" />
@@ -201,7 +232,13 @@ export function DataTable<TRow, TChild = never>(
             hasToggleColumn={expansion !== undefined}
             onSort={handleSort}
           />
-          <tbody>{renderBody()}</tbody>
+          <tbody
+            ref={bodyRef}
+            className={styles.body}
+            data-refetching={isRefetching}
+          >
+            {renderBody()}
+          </tbody>
         </table>
       </div>
       {showPagination && (

@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { getCellProps } from "./cellProps.ts";
+import { SortIcon } from "./icons.tsx";
 import type { ColumnDef, SortDirection, SortState } from "./types.ts";
 import styles from "./data-table.module.css";
 
@@ -18,11 +19,6 @@ const ARIA_SORT: Record<SortDirection, "ascending" | "descending"> = {
   asc: "ascending",
   desc: "descending",
 };
-
-// The following is temp design, will fix the UI after completing the logic
-const SORT_ARROW: Record<SortDirection, string> = { asc: "▲", desc: "▼" };
-// Hints that an unsorted header is still clickable.
-const UNSORTED_ARROW = "↕";
 
 /**
  * The table's `<thead>`. Sortable headers are buttons, so the keyboard works for free.
@@ -65,10 +61,12 @@ export function TableHeader<TRow>({
                   onClick={() => onSort(column.id)}
                 >
                   {column.header}
-                  {/* This is just for decoration. aria-sort already announces the direction. */}
-                  <span aria-hidden="true">
-                    {direction ? SORT_ARROW[direction] : UNSORTED_ARROW}
-                  </span>
+                  {/* Decoration only: aria-sort already announces the direction. "none" still
+                      shows a faint icon, so unsorted headers look clickable. */}
+                  <SortIcon
+                    direction={direction ?? "none"}
+                    className={styles.sortIcon}
+                  />
                 </button>
               ) : (
                 column.header
