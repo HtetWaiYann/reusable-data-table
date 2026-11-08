@@ -1,6 +1,7 @@
 import { memo, type ReactElement } from "react";
 import type { ColumnDef } from "./types.ts";
 import { formatCellValue } from "./utils/cell.ts";
+import styles from "./data-table.module.css";
 
 /** Props of {@link TableRow}. */
 export interface TableRowProps<TRow> {
@@ -13,9 +14,9 @@ function TableRowComponent<TRow>({
   columns,
 }: TableRowProps<TRow>): ReactElement {
   return (
-    <tr>
+    <tr className={styles.row}>
       {columns.map((column) => (
-        <td key={column.id}>
+        <td key={column.id} className={styles.cell}>
           {column.renderCell
             ? column.renderCell(row)
             : formatCellValue(column.getValue?.(row))}

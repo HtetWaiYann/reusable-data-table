@@ -5,6 +5,7 @@ import { Pagination } from "./Pagination.tsx";
 import { TableHeader } from "./TableHeader.tsx";
 import { TableRow } from "./TableRow.tsx";
 import type { DataTableProps } from "./types.ts";
+import styles from "./data-table.module.css";
 
 /**
  * A reusable data table
@@ -75,21 +76,26 @@ export function DataTable<TRow, TChild = never>(
   }
 
   return (
-    <>
-      <table>
-        <caption>{caption}</caption>
-        <TableHeader
-          columns={columns}
-          sort={sorting.sort}
-          onSort={handleSort}
-        />
-        <tbody>
-          {paging.pageRows.map((row) => (
-            // Never use the index. After sorting, index keys would attach state to the wrong row.
-            <TableRow key={getRowId(row)} row={row} columns={columns} />
-          ))}
-        </tbody>
-      </table>
+    <div className={styles.root}>
+      {/* The wrapper scrolls, so a wide table never widens the page. */}
+      <div className={styles.scroll}>
+        <table className={styles.table}>
+          <caption className={styles.caption}>
+            <span className={styles.captionText}>{caption}</span>
+          </caption>
+          <TableHeader
+            columns={columns}
+            sort={sorting.sort}
+            onSort={handleSort}
+          />
+          <tbody>
+            {paging.pageRows.map((row) => (
+              // Never use the index. After sorting, index keys would attach state to the wrong row.
+              <TableRow key={getRowId(row)} row={row} columns={columns} />
+            ))}
+          </tbody>
+        </table>
+      </div>
       <Pagination
         pageIndex={paging.pageIndex}
         pageSize={paging.pageSize}
@@ -99,6 +105,6 @@ export function DataTable<TRow, TChild = never>(
         onPageIndexChange={paging.setPageIndex}
         onPageSizeChange={paging.setPageSize}
       />
-    </>
+    </div>
   );
 }

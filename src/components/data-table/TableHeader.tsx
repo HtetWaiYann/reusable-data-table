@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { ColumnDef, SortDirection, SortState } from "./types.ts";
+import styles from "./data-table.module.css";
 
 /** Props of {@link TableHeader}. */
 export interface TableHeaderProps<TRow> {
@@ -41,9 +42,14 @@ export function TableHeader<TRow>({
               scope="col"
               aria-sort={direction ? ARIA_SORT[direction] : undefined}
               style={{ width: column.width }}
+              className={styles.headerCell}
             >
               {column.sortable ? (
-                <button type="button" onClick={() => onSort(column.id)}>
+                <button
+                  type="button"
+                  className={styles.sortButton}
+                  onClick={() => onSort(column.id)}
+                >
                   {column.header}
                   {/* This is just for decoration. aria-sort already announces the direction. */}
                   <span aria-hidden="true">

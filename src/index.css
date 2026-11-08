@@ -6,9 +6,14 @@
   --color-surface: #f6f8fa;
   --color-border: #d0d7de;
   --color-accent: #0969da;
+  --space-1: 4px;
   --space-2: 8px;
+  --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
+  --radius-1: 6px;
+  --radius-2: 8px;
+  --font-size-sm: 13px;
   --nav-width: 200px;
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
 

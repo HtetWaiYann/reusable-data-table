@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import { getRowRange } from "./utils/pagination.ts";
+import styles from "./data-table.module.css";
 
 /** Props of {@link Pagination}. */
 export interface PaginationProps {
@@ -36,31 +37,36 @@ export function Pagination({
     : [...pageSizeOptions, pageSize].toSorted((a, b) => a - b);
 
   return (
-    <nav aria-label="Pagination">
-      <p>
+    <nav aria-label="Pagination" className={styles.pagination}>
+      <p className={styles.summary}>
         Showing {from}–{to} of {rowCount}
       </p>
-      <button
-        type="button"
-        disabled={isFirstPage}
-        onClick={() => onPageIndexChange(pageIndex - 1)}
-      >
-        Previous
-      </button>
-      {/* Users count pages from 1. */}
-      <span>
-        Page {pageIndex + 1} of {pageCount}
-      </span>
-      <button
-        type="button"
-        disabled={isLastPage}
-        onClick={() => onPageIndexChange(pageIndex + 1)}
-      >
-        Next
-      </button>
-      <label>
-        Rows per page{" "}
+      <div className={styles.pageControls}>
+        <button
+          type="button"
+          className={styles.button}
+          disabled={isFirstPage}
+          onClick={() => onPageIndexChange(pageIndex - 1)}
+        >
+          Previous
+        </button>
+        {/* Users count pages from 1. */}
+        <span>
+          Page {pageIndex + 1} of {pageCount}
+        </span>
+        <button
+          type="button"
+          className={styles.button}
+          disabled={isLastPage}
+          onClick={() => onPageIndexChange(pageIndex + 1)}
+        >
+          Next
+        </button>
+      </div>
+      <label className={styles.pageSize}>
+        Rows per page
         <select
+          className={styles.select}
           value={pageSize}
           onChange={(event) => onPageSizeChange(Number(event.target.value))}
         >
