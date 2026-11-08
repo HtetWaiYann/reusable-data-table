@@ -39,7 +39,7 @@ function mainRows(): HTMLElement[] {
 
 describe("DemoPage", () => {
   it("shows the timetable's first page, earliest class first", async () => {
-    await renderLoadedPage();
+    await renderLoadedPage("/demo?dataset=timetable");
     const earliest = classSessions.toSorted(
       (a, b) => a.startsAt.getTime() - b.startsAt.getTime(),
     )[0];
@@ -59,7 +59,7 @@ describe("DemoPage", () => {
 
   it("shows attendees as child rows when a class is expanded (inline)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await renderLoadedPage();
+    await renderLoadedPage("/demo?dataset=timetable");
 
     await user.click(screen.getAllByRole("button", { name: "Details" })[0]);
 
@@ -71,7 +71,7 @@ describe("DemoPage", () => {
 
   it("loads child rows on demand in lazy mode", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await renderLoadedPage("/demo?children=lazy");
+    await renderLoadedPage("/demo?dataset=timetable&children=lazy");
 
     expect(screen.getByRole("radio", { name: /Lazy/ })).toBeChecked();
     await user.click(screen.getAllByRole("button", { name: "Details" })[0]);
@@ -81,8 +81,8 @@ describe("DemoPage", () => {
     expect(screen.queryByLabelText("Loading details")).not.toBeInTheDocument();
   });
 
-  it("renders the second dataset with the same table", async () => {
-    await renderLoadedPage("/demo?dataset=members");
+  it("opens on the members dataset by default", async () => {
+    await renderLoadedPage();
 
     expect(screen.getByRole("heading", { name: "Members" })).toBeVisible();
     expect(screen.getByRole("columnheader", { name: /Plan/ })).toBeVisible();
@@ -95,14 +95,16 @@ describe("DemoPage", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await renderLoadedPage();
 
-    await user.click(screen.getByRole("radio", { name: "Members" }));
+    await user.click(screen.getByRole("radio", { name: "Class timetable" }));
 
-    expect(screen.getByRole("heading", { name: "Members" })).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Class timetable" }),
+    ).toBeVisible();
   });
 
   it("server mode: a sort click fetches page 1 again, keeping rows visible meanwhile", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await renderLoadedPage("/demo?mode=server");
+    await renderLoadedPage("/demo?dataset=timetable&mode=server");
 
     expect(
       screen.getByText(`Showing 1–10 of ${classSessions.length}`),

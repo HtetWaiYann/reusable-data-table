@@ -9,7 +9,7 @@ import { fetchChildren, type MockScenario } from "../../mocks/api.ts";
 import { getMembers } from "../../mocks/members.ts";
 import { ROW_COUNTS, type ShowcaseOptions } from "../showcase/options.ts";
 import { useTableData } from "../showcase/useTableData.ts";
-import { BookingTable } from "./BookingTable.tsx";
+import { BookingCards } from "./BookingCards.tsx";
 import type { Booking, Member } from "./types.ts";
 
 // Built once: creating a formatter is slow.
@@ -51,9 +51,9 @@ const memberColumns: ColumnDef<Member>[] = [
 
 const DEFAULT_MEMBER_SORT: SortState = { columnId: "name", direction: "asc" };
 
-// Custom render, added on top of the data-only configs below when "Custom" is picked.
+// Custom render (cards, not a table), added on top of the data-only configs below when "Custom" is picked.
 function renderBookings(bookings: Booking[], row: Member) {
-  return <BookingTable bookings={bookings} memberName={row.name} />;
+  return <BookingCards bookings={bookings} memberName={row.name} />;
 }
 
 const inlineBookingsExpansion: ExpansionConfig<Member, Booking> = {

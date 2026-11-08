@@ -1,4 +1,4 @@
-// Shared Tailwind classes for the nested child tables (attendees, bookings). Arbitrary variants
+// Shared Tailwind classes for the custom child tables (attendees) and child empty messages. Arbitrary variants
 // ([&_th]) style the cells from the table, so each <th>/<td> stays free of repeated classes.
 
 /** The card around a child table: white on the detail row's gray, so it reads as nested. */

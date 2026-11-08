@@ -1,7 +1,7 @@
 import type { MockScenario } from "../../mocks/api.ts";
 
-/** Which dataset the table shows. Members is the second, differently shaped dataset. */
-export type Dataset = "timetable" | "members";
+/** Which dataset the table shows. Members is the default on /demo: the timetable already has its own page. */
+export type Dataset = "members" | "timetable";
 /** How child rows arrive: with the parent row, or fetched when a row expands. */
 export type ChildRowsMode = "inline" | "lazy";
 /** How child rows look: the table's built-in table (data only), or the consumer's own render. */
@@ -28,7 +28,7 @@ export const ROW_COUNTS: Record<DataSize, number> = {
 };
 
 export const DEFAULT_OPTIONS: ShowcaseOptions = {
-  dataset: "timetable",
+  dataset: "members",
   childRows: "inline",
   childRender: "custom",
   dataMode: "client",
@@ -43,7 +43,7 @@ const PARAMS: {
     values: readonly ShowcaseOptions[Key][];
   };
 } = {
-  dataset: { name: "dataset", values: ["timetable", "members"] },
+  dataset: { name: "dataset", values: ["members", "timetable"] },
   childRows: { name: "children", values: ["inline", "lazy"] },
   childRender: { name: "render", values: ["builtin", "custom"] },
   dataMode: { name: "mode", values: ["client", "server"] },

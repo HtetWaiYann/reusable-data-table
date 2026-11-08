@@ -42,7 +42,7 @@ describe("showcase options", () => {
   it("round-trips through the URL", () => {
     const options = {
       ...DEFAULT_OPTIONS,
-      dataset: "members" as const,
+      dataset: "timetable" as const,
       size: "large" as const,
     };
 

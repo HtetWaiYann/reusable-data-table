@@ -96,8 +96,8 @@ export function ControlPanel({
               name="dataset"
               value={options.dataset}
               choices={[
-                { value: "timetable", label: "Class timetable" },
                 { value: "members", label: "Members" },
+                { value: "timetable", label: "Class timetable" },
               ]}
               onChange={(dataset) => onChange({ ...options, dataset })}
             />
