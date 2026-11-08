@@ -19,9 +19,9 @@ describe("App routing", () => {
     ).toBeInTheDocument();
   });
 
-  it("marks the timetable link as the current page", () => {
+  it("marks the dashboard link as the current page", () => {
     renderAt("/");
-    expect(screen.getByRole("link", { name: "Timetable" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
       "aria-current",
       "page",
     );

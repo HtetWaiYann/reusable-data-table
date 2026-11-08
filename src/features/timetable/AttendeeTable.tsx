@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import type { Attendee } from "./types.ts";
-import styles from "./timetable.module.css";
+import styles from "../common/childTable.module.css";
 
 /** Props of {@link AttendeeTable}. */
 export interface AttendeeTableProps {
@@ -24,7 +24,7 @@ export function AttendeeTable({
     return <p className={styles.empty}>No attendees yet.</p>;
   }
   return (
-    <table className={styles.attendees} aria-label={`Attendees: ${className}`}>
+    <table className={styles.childTable} aria-label={`Attendees: ${className}`}>
       <thead>
         <tr>
           <th scope="col">Customer</th>

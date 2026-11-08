@@ -1,25 +1,25 @@
-/* --- Attendee child rows --- */
+/* Child rows (attendees, bookings) and status badges, shared by both datasets. */
 
-.attendees {
+.childTable {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
 }
 
-.attendees th,
-.attendees td {
+.childTable th,
+.childTable td {
   padding: var(--space-1) var(--space-3);
   text-align: left;
   white-space: nowrap;
   border-bottom: 1px solid var(--color-border);
 }
 
-.attendees th {
+.childTable th {
   color: var(--color-text-muted);
   font-weight: 600;
 }
 
-.attendees tbody tr:last-child td {
+.childTable tbody tr:last-child td {
   border-bottom: 0;
 }
 
@@ -53,30 +53,4 @@
 .badge[data-status="No-show"] {
   color: var(--color-danger);
   border-color: currentcolor;
-}
-
-/* --- Expansion mode switch --- */
-
-.modeSwitch {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
-  margin: 0 0 var(--space-4);
-  padding: 0;
-  border: 0;
-  font-size: var(--font-size-sm);
-}
-
-.modeSwitch legend {
-  float: left;
-  padding: 0;
-  color: var(--color-text-muted);
-}
-
-.modeSwitch label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  cursor: pointer;
 }

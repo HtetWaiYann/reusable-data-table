@@ -3,11 +3,11 @@ import type {
   ExpansionConfig,
   SortState,
 } from "../../components/data-table/index.ts";
-import { fetchClassAttendees, type MockScenario } from "../../mocks/api.ts";
+import { fetchChildren, type MockScenario } from "../../mocks/api.ts";
 import { AttendeeTable } from "./AttendeeTable.tsx";
 import { getAttendance, getClassStatus } from "./classStatus.ts";
 import type { Attendee, ClassSession } from "./types.ts";
-import styles from "./timetable.module.css";
+import styles from "../common/childTable.module.css";
 
 const MS_PER_MINUTE = 60_000;
 
@@ -103,8 +103,9 @@ export function createLazyAttendeesExpansion(
 ): ExpansionConfig<ClassSession, Attendee> {
   return {
     mode: "lazy",
+    // A real API would fetch by `row.id`; the fake one is handed the class's attendees to return.
     loadChildren: (row, signal) =>
-      fetchClassAttendees(row.id, scenario, signal),
+      fetchChildren(row.attendees, scenario, signal),
     renderChildren: renderAttendees,
   };
 }
