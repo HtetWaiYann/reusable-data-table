@@ -90,3 +90,70 @@ describe("DataTable", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("DataTable pagination", () => {
+  // 25 people named P01…P25, so pages are easy to read: 10 + 10 + 5.
+  const manyPeople: Person[] = Array.from({ length: 25 }, (_, index) => ({
+    id: String(index + 1),
+    name: `P${String(index + 1).padStart(2, "0")}`,
+    age: index,
+  }));
+
+  function renderPagedTable() {
+    return render(
+      <DataTable
+        caption="People"
+        data={manyPeople}
+        getRowId={(row) => row.id}
+        columns={columns}
+      />,
+    );
+  }
+
+  it("shows 10 rows per page and moves with Next and Previous", async () => {
+    const user = userEvent.setup();
+    renderPagedTable();
+    const previous = screen.getByRole("button", { name: "Previous" });
+    const next = screen.getByRole("button", { name: "Next" });
+
+    expect(firstColumn()).toHaveLength(10);
+    expect(previous).toBeDisabled();
+    expect(screen.getByText("Showing 1–10 of 25")).toBeInTheDocument();
+
+    await user.click(next);
+    expect(firstColumn()[0]).toBe("P11");
+    expect(screen.getByText("Page 2 of 3")).toBeInTheDocument();
+
+    await user.click(next);
+    expect(firstColumn()).toEqual(["P21", "P22", "P23", "P24", "P25"]);
+    expect(next).toBeDisabled();
+
+    await user.click(previous);
+    expect(firstColumn()[0]).toBe("P11");
+  });
+
+  it("goes back to page 1 when the page size changes", async () => {
+    const user = userEvent.setup();
+    renderPagedTable();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Rows per page" }),
+      "20",
+    );
+
+    expect(firstColumn()).toHaveLength(20);
+    expect(firstColumn()[0]).toBe("P01");
+  });
+
+  it("goes back to page 1 when the sort changes", async () => {
+    const user = userEvent.setup();
+    renderPagedTable();
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    await user.click(screen.getByRole("button", { name: /Name/ }));
+
+    expect(screen.getByText("Page 1 of 3")).toBeInTheDocument();
+    expect(firstColumn()[0]).toBe("P01");
+  });
+});
