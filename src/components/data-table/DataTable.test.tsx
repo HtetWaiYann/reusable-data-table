@@ -300,6 +300,41 @@ describe("DataTable expandable rows", () => {
     expect(screen.getAllByRole("button", { name: "Details" })).toHaveLength(2);
   });
 
+  it("renders the built-in child table from the data when no renderChildren is given", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable
+        caption="People"
+        data={people}
+        getRowId={(row) => row.id}
+        columns={columns}
+        expansion={{
+          mode: "inline",
+          getChildren: (row) =>
+            (petsByPerson[row.id] ?? []).map((pet) => ({
+              ...pet,
+              isVaccinated: true,
+            })),
+          childIdKey: "id",
+          hideChildKeys: ["id"],
+        }}
+      />,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Details" })[0]);
+    const childTable = screen.getByRole("table", { name: "Details" });
+
+    // Headers come from the keys, humanized; the hidden id has no column.
+    expect(
+      within(childTable)
+        .getAllByRole("columnheader")
+        .map((header) => header.textContent),
+    ).toEqual(["Name", "Is vaccinated"]);
+    expect(within(childTable).getByText("Rex")).toBeVisible();
+    expect(within(childTable).getByText("Yes")).toBeVisible();
+    expect(within(childTable).queryByText("p1")).not.toBeInTheDocument();
+  });
+
   it("lazy: shows loading, then children, and doesn't refetch on re-expand", async () => {
     const user = userEvent.setup();
     let resolveRequest: (pets: Pet[]) => void = () => {};

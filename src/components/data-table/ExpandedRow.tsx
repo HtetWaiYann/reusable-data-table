@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
+import { DefaultChildTable } from "./DefaultChildTable.tsx";
 import type { LazyChildrenEntry } from "./hooks/useLazyChildren.ts";
 import type { ExpansionConfig } from "./types.ts";
 import styles from "./data-table.module.css";
@@ -33,12 +34,26 @@ export function ExpandedRow<TRow, TChild>({
   lazyEntry,
   onRetry,
 }: ExpandedRowProps<TRow, TChild>): ReactElement {
+  // Custom render when given (any layout); otherwise the built-in table, drawn from the data alone.
+  function renderChildren(children: TChild[]): ReactNode {
+    if (expansion.renderChildren) {
+      return expansion.renderChildren(children, row);
+    }
+    return (
+      <DefaultChildTable
+        items={children}
+        childIdKey={expansion.childIdKey}
+        hideChildKeys={expansion.hideChildKeys}
+      />
+    );
+  }
+
   function renderContent(): ReactNode {
     if (expansion.mode === "inline") {
-      return expansion.renderChildren(expansion.getChildren(row), row);
+      return renderChildren(expansion.getChildren(row));
     }
     if (lazyEntry?.status === "success") {
-      return expansion.renderChildren(lazyEntry.children, row);
+      return renderChildren(lazyEntry.children);
     }
     if (lazyEntry?.status === "error") {
       return (

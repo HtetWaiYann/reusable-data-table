@@ -85,11 +85,15 @@ export interface ColumnDef<TRow> {
 /** Fields shared by both expansion modes. */
 interface ExpansionBase<TRow, TChild> {
   /**
-   * Renders the expanded content, inside a full-width cell under the row.
-   * The table supplies the container, the animation and (in lazy mode) loading and error states;
-   * the consumer decides the content, including what an empty `children` array looks like.
+   * Custom content for the expanded row: any markup or layout. The table still supplies the
+   * container, the animation and (in lazy mode) loading and error states.
+   * Omit it to get the built-in child table, drawn from the children's own keys.
    */
-  renderChildren: (children: TChild[], row: TRow) => ReactNode;
+  renderChildren?: (children: TChild[], row: TRow) => ReactNode;
+  /** Built-in child table only: the key whose value is each child row's React key. Default: the array index (fine, since the child list is never reordered). */
+  childIdKey?: keyof TChild & string;
+  /** Built-in child table only: keys to leave out of the columns, e.g. `["id"]`. Default: every key is shown. */
+  hideChildKeys?: readonly (keyof TChild & string)[];
   /** Whether a row gets an expand toggle, e.g. `false` for a row with nothing to show. Default: every row can expand. */
   canExpand?: (row: TRow) => boolean;
 }

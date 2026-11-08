@@ -376,6 +376,45 @@
     padding: var(--dt-space-3) var(--dt-space-4) var(--dt-space-4);
   }
 
+  /* --- Built-in child table (when no renderChildren is given) --- */
+
+  /* A white card on the detail row's surface, so the nested table reads as belonging to the row
+     above it. overflow-x: auto lets a wide child table scroll inside the card. */
+  .childCard {
+    overflow-x: auto;
+    border: 1px solid var(--dt-border);
+    border-radius: var(--dt-radius-control);
+    background: var(--dt-bg);
+  }
+
+  .childTable {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .childTable th,
+  .childTable td {
+    padding: var(--dt-space-2) var(--dt-space-3);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .childTable th {
+    color: var(--dt-text-muted);
+    font-size: var(--dt-font-size-header);
+    font-weight: 500;
+  }
+
+  .childTable tbody tr {
+    border-top: 1px solid var(--dt-border);
+  }
+
+  .childEmpty {
+    margin: 0;
+    color: var(--dt-text-muted);
+  }
+
   /* Hidden on screen but still read by screen readers. */
   .visuallyHidden {
     position: absolute;
