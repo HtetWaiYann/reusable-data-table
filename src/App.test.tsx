@@ -19,14 +19,18 @@ describe("App routing", () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the demo on "/demo" and marks its nav link as current', () => {
-    renderAt("/demo");
-    expect(
-      screen.getByRole("heading", { name: "Data table demo" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Demo" })).toHaveAttribute(
+  it("marks the timetable link as the current page", () => {
+    renderAt("/");
+    expect(screen.getByRole("link", { name: "Timetable" })).toHaveAttribute(
       "aria-current",
       "page",
     );
+  });
+
+  it("sends unknown paths to the timetable", () => {
+    renderAt("/demo");
+    expect(
+      screen.getByRole("heading", { name: "Class timetable" }),
+    ).toBeInTheDocument();
   });
 });

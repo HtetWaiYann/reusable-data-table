@@ -1,6 +1,5 @@
 import type { ReactElement } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
-import DemoPage from "./pages/DemoPage.tsx";
+import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import TimetablePage from "./pages/TimetablePage.tsx";
 
 /**
@@ -16,12 +15,12 @@ export default function App(): ReactElement {
         <NavLink to="/" end>
           Timetable
         </NavLink>
-        <NavLink to="/demo">Demo</NavLink>
       </nav>
       <main className="app-main">
         <Routes>
           <Route path="/" element={<TimetablePage />} />
-          <Route path="/demo" element={<DemoPage />} />
+          {/* One page: every scenario is an option on it. Unknown paths (e.g. an old /demo link) go home. */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
