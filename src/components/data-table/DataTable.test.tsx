@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { DataTable, type ColumnDef, type DataTableProps } from "./index.ts";
@@ -254,5 +254,106 @@ describe("DataTable states", () => {
 
     renderWithState({ emptyState: <strong>No classes this week</strong> });
     expect(screen.getByText("No classes this week")).toBeVisible();
+  });
+});
+
+describe("DataTable expandable rows", () => {
+  interface Pet {
+    id: string;
+    name: string;
+  }
+  const petsByPerson: Record<string, Pet[]> = {
+    "1": [{ id: "p1", name: "Rex" }],
+    "2": [],
+    "3": [{ id: "p2", name: "Tom" }],
+  };
+  const renderPets = (pets: Pet[]) =>
+    pets.length === 0 ? "No pets" : pets.map((pet) => pet.name).join(", ");
+
+  it("inline: toggles the detail row and its aria-expanded state", async () => {
+    const user = userEvent.setup();
+    render(
+      <DataTable
+        caption="People"
+        data={people}
+        getRowId={(row) => row.id}
+        columns={columns}
+        expansion={{
+          mode: "inline",
+          getChildren: (row) => petsByPerson[row.id],
+          renderChildren: renderPets,
+          canExpand: (row) => row.id !== "3",
+        }}
+      />,
+    );
+    const [caraToggle] = screen.getAllByRole("button", { name: "Details" });
+
+    expect(caraToggle).toHaveAttribute("aria-expanded", "false");
+    await user.click(caraToggle);
+    expect(caraToggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Rex")).toBeVisible();
+    expect(
+      document.getElementById(caraToggle.getAttribute("aria-controls") ?? ""),
+    ).toHaveTextContent("Rex");
+
+    // canExpand false for Ben (id 3): only two toggles.
+    expect(screen.getAllByRole("button", { name: "Details" })).toHaveLength(2);
+  });
+
+  it("lazy: shows loading, then children, and doesn't refetch on re-expand", async () => {
+    const user = userEvent.setup();
+    let resolveRequest: (pets: Pet[]) => void = () => {};
+    const loadChildren = vi.fn(
+      () =>
+        new Promise<Pet[]>((resolve) => {
+          resolveRequest = resolve;
+        }),
+    );
+    render(
+      <DataTable
+        caption="People"
+        data={people}
+        getRowId={(row) => row.id}
+        columns={columns}
+        expansion={{ mode: "lazy", loadChildren, renderChildren: renderPets }}
+      />,
+    );
+    const [caraToggle] = screen.getAllByRole("button", { name: "Details" });
+
+    await user.click(caraToggle);
+    expect(screen.getByLabelText("Loading details")).toBeInTheDocument();
+
+    await act(async () => resolveRequest([{ id: "p1", name: "Rex" }]));
+    expect(screen.getByText("Rex")).toBeVisible();
+
+    await user.click(caraToggle);
+    await user.click(caraToggle);
+    expect(loadChildren).toHaveBeenCalledOnce();
+  });
+
+  it("lazy: shows an error with Retry when the loader fails", async () => {
+    const user = userEvent.setup();
+    const loadChildren = vi
+      .fn<(row: Person, signal: AbortSignal) => Promise<Pet[]>>()
+      .mockRejectedValueOnce(new Error("500"))
+      .mockResolvedValueOnce([{ id: "p1", name: "Rex" }]);
+    render(
+      <DataTable
+        caption="People"
+        data={people}
+        getRowId={(row) => row.id}
+        columns={columns}
+        expansion={{ mode: "lazy", loadChildren, renderChildren: renderPets }}
+      />,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Details" })[0]);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Couldn't load the details.",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Retry" }));
+    expect(await screen.findByText("Rex")).toBeVisible();
+    expect(loadChildren).toHaveBeenCalledTimes(2);
   });
 });

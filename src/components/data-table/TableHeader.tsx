@@ -8,6 +8,8 @@ export interface TableHeaderProps<TRow> {
   columns: ColumnDef<TRow>[];
   sort: SortState;
   pinnedColumnId: string | null;
+  /** Adds the header cell for the expand toggle column. */
+  hasToggleColumn: boolean;
   onSort: (columnId: string) => void;
 }
 
@@ -30,11 +32,21 @@ export function TableHeader<TRow>({
   columns,
   sort,
   pinnedColumnId,
+  hasToggleColumn,
   onSort,
 }: TableHeaderProps<TRow>): ReactElement {
   return (
     <thead>
       <tr>
+        {hasToggleColumn && (
+          <th
+            scope="col"
+            className={`${styles.headerCell} ${styles.toggleCell}`}
+          >
+            {/* Visually empty, but gives screen readers a name for the column. */}
+            <span className={styles.visuallyHidden}>Details</span>
+          </th>
+        )}
         {columns.map((column) => {
           const direction =
             sort?.columnId === column.id ? sort.direction : undefined;

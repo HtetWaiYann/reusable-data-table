@@ -7,6 +7,8 @@ import styles from "./data-table.module.css";
 export interface SkeletonRowsProps<TRow> {
   columns: ColumnDef<TRow>[];
   pinnedColumnId: string | null;
+  /** Adds an empty first cell to line up with the expand toggle column. */
+  hasToggleColumn: boolean;
   /** How many placeholder rows; the page size, so the table doesn't jump when data arrives. */
   rowCount: number;
 }
@@ -18,6 +20,7 @@ export interface SkeletonRowsProps<TRow> {
 export function SkeletonRows<TRow>({
   columns,
   pinnedColumnId,
+  hasToggleColumn,
   rowCount,
 }: SkeletonRowsProps<TRow>): ReactElement {
   return (
@@ -26,6 +29,9 @@ export function SkeletonRows<TRow>({
         // Placeholders have no content to read, and the table is aria-busy, so hide them from screen readers.
         // Index keys are fine: these rows never reorder and hold no state.
         <tr key={rowIndex} aria-hidden="true">
+          {hasToggleColumn && (
+            <td className={`${styles.cell} ${styles.toggleCell}`} />
+          )}
           {columns.map((column) => (
             <td
               key={column.id}

@@ -10,8 +10,10 @@
 
 /* --- Table --- */
 
-/* The wrapper scrolls, so a wide table never widens the page. */
+/* The wrapper scrolls, so a wide table never widens the page. It's also a size container, so
+   expanded content can match the visible width (100cqi) rather than the full scrollable table. */
 .scroll {
+  container-type: inline-size;
   overflow-x: auto;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-2);
@@ -168,6 +170,11 @@
 
 /* Respect the OS setting: no motion. Skeleton bars stay plain grey; the progress bar becomes a still, full bar. */
 @media (prefers-reduced-motion: reduce) {
+  .detailCollapse,
+  .toggleButton > span {
+    transition: none;
+  }
+
   .skeletonBar::after {
     animation: none;
   }
@@ -176,6 +183,101 @@
     animation: none;
     transform: none;
   }
+}
+
+/* --- Expansion --- */
+
+.toggleCell {
+  width: var(--toggle-column-width);
+  padding-right: 0;
+}
+
+/* Exactly one text line tall (1lh) and no padding, so rows with a toggle stay the same height
+   as skeleton rows; otherwise the table would jump when data loads (see step 12b). */
+.toggleButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1lh;
+  height: 1lh;
+  padding: 0;
+  vertical-align: top;
+  border: 0;
+  border-radius: var(--radius-1);
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.toggleButton:hover {
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* The arrow turns to point down when open. */
+.toggleButton > span {
+  transition: transform var(--duration-expand);
+}
+
+.toggleButton[aria-expanded="true"] > span {
+  transform: rotate(90deg);
+}
+
+/* No border or padding on the cell itself, so a closed detail row is truly 0 px tall. */
+.detailCell {
+  padding: 0;
+}
+
+.detailRow[data-open="true"] > .detailCell {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* Animating grid-template-rows from 0fr to 1fr reaches the content's natural height,
+   which height: auto can't be animated to. */
+.detailCollapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-expand) ease;
+}
+
+.detailRow[data-open="true"] .detailCollapse {
+  grid-template-rows: 1fr;
+}
+
+/* The first open mounts the row already open, so there's no "before" value to transition from.
+   @starting-style supplies one (0fr). Older browsers just open instantly. */
+@starting-style {
+  .detailRow[data-open="true"] .detailCollapse {
+    grid-template-rows: 0fr;
+  }
+}
+
+/* min-height: 0 lets the grid row shrink below the content's height; overflow hides the rest. */
+.detailClip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* As wide as the visible box (100cqi), not the whole table, and sticky, so the details stay in
+   view when a wide table is scrolled sideways (same idea as the caption). */
+.detailContent {
+  position: sticky;
+  left: 0;
+  box-sizing: border-box;
+  width: 100cqi;
+  padding: var(--space-3) var(--space-4);
+}
+
+/* Hidden on screen but still read by screen readers. */
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* --- Pagination --- */
@@ -233,6 +335,7 @@
 /* --- Focus --- */
 
 /* :focus-visible shows the ring for keyboard users only, not on mouse clicks. */
+.toggleButton:focus-visible,
 .sortButton:focus-visible,
 .button:focus-visible,
 .select:focus-visible {

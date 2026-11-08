@@ -21,6 +21,8 @@
   --radius-skeleton: 4px;
   --progress-bar-height: 3px;
   --duration-shimmer: 1.2s;
+  --duration-expand: 200ms;
+  --toggle-column-width: 40px;
   --nav-width: 200px;
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
 

@@ -1,4 +1,12 @@
-import type { ReactElement, ReactNode, UIEvent } from "react";
+import {
+  useCallback,
+  useId,
+  type ReactElement,
+  type ReactNode,
+  type UIEvent,
+} from "react";
+import { useExpansion } from "./hooks/useExpansion.ts";
+import { useLazyChildren } from "./hooks/useLazyChildren.ts";
 import { usePagination } from "./hooks/usePagination.ts";
 import { usePinnedColumn } from "./hooks/usePinnedColumn.ts";
 import { useSorting } from "./hooks/useSorting.ts";
@@ -66,6 +74,7 @@ export function DataTable<TRow, TChild = never>(
     error = null,
     onRetry,
     emptyState,
+    expansion,
   } = props;
 
   const sorting = useSorting({
@@ -94,6 +103,31 @@ export function DataTable<TRow, TChild = never>(
 
   const pinnedColumnId = usePinnedColumn(columns);
 
+  // --- Expansion ---
+  const detailIdPrefix = useId();
+  const { expandedRows, toggle } = useExpansion();
+  const lazyChildren = useLazyChildren(
+    expansion?.mode === "lazy" ? expansion.loadChildren : undefined,
+  );
+  const { load } = lazyChildren;
+  // The toggle column adds one cell to every row, so full-width cells span one more.
+  const colSpan = columns.length + (expansion ? 1 : 0);
+
+  // Stable callbacks (no getRowId inside; rows pass their own id), so memoized rows don't re-render.
+  // Loading starts in the click handler, not an effect: the user's action is what causes the fetch.
+  // load() is a no-op in inline mode, and when the children are already loading or loaded.
+  const handleToggleRow = useCallback(
+    (row: TRow, rowId: string) => {
+      toggle(rowId);
+      load(row, rowId);
+    },
+    [toggle, load],
+  );
+  const handleRetryRow = useCallback(
+    (row: TRow, rowId: string) => load(row, rowId, true),
+    [load],
+  );
+
   // First load shows skeletons. A refetch keeps the current rows and shows a progress bar instead,
   // so the table doesn't flash back to placeholders on every sort or page change in server mode.
   const isFirstLoad = isLoading && data.length === 0;
@@ -107,27 +141,37 @@ export function DataTable<TRow, TChild = never>(
         <SkeletonRows
           columns={columns}
           pinnedColumnId={pinnedColumnId}
+          hasToggleColumn={expansion !== undefined}
           rowCount={paging.pageSize}
         />
       );
     }
     if (error) {
-      return (
-        <ErrorRow colSpan={columns.length} message={error} onRetry={onRetry} />
-      );
+      return <ErrorRow colSpan={colSpan} message={error} onRetry={onRetry} />;
     }
     if (paging.pageRows.length === 0) {
-      return <EmptyRow colSpan={columns.length} content={emptyState} />;
+      return <EmptyRow colSpan={colSpan} content={emptyState} />;
     }
-    return paging.pageRows.map((row) => (
-      // Never use the index. After sorting, index keys would attach state to the wrong row.
-      <TableRow
-        key={getRowId(row)}
-        row={row}
-        columns={columns}
-        pinnedColumnId={pinnedColumnId}
-      />
-    ));
+    return paging.pageRows.map((row) => {
+      const rowId = getRowId(row);
+      return (
+        // Never use the index. After sorting, index keys would attach state to the wrong row.
+        <TableRow
+          key={rowId}
+          row={row}
+          rowId={rowId}
+          columns={columns}
+          pinnedColumnId={pinnedColumnId}
+          expansion={expansion}
+          detailIdPrefix={detailIdPrefix}
+          isExpanded={expandedRows.get(rowId) === true}
+          isDetailMounted={expandedRows.has(rowId)}
+          lazyEntry={lazyChildren.entries.get(rowId)}
+          onToggle={handleToggleRow}
+          onRetry={handleRetryRow}
+        />
+      );
+    });
   }
 
   function handleSort(columnId: string): void {
@@ -154,6 +198,7 @@ export function DataTable<TRow, TChild = never>(
             columns={columns}
             sort={sorting.sort}
             pinnedColumnId={pinnedColumnId}
+            hasToggleColumn={expansion !== undefined}
             onSort={handleSort}
           />
           <tbody>{renderBody()}</tbody>
