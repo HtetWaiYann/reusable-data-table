@@ -2,6 +2,7 @@ import {
   useCallback,
   useId,
   useRef,
+  useState,
   type ReactElement,
   type ReactNode,
   type UIEvent,
@@ -17,6 +18,9 @@ import { TableHeader } from "./TableHeader.tsx";
 import { TableRow } from "./TableRow.tsx";
 import { EmptyRow, ErrorRow } from "./TableStates.tsx";
 import type { DataTableProps } from "./types.ts";
+import { describePage, describeSort } from "./utils/announcements.ts";
+import { getPageCount } from "./utils/pagination.ts";
+import { nextSort } from "./utils/sorting.ts";
 import styles from "./data-table.module.css";
 
 // Shows the pinned column's shadow only while it's stuck and other cells pass underneath.
@@ -126,6 +130,10 @@ export function DataTable<TRow, TChild = never>(
 
   const pinnedColumnId = usePinnedColumn(columns);
 
+  // What the live region says. Set in the event handlers, not derived from sort and page during
+  // render: a derived message would also be read out when data first loads, not only after a click.
+  const [announcement, setAnnouncement] = useState("");
+
   // The <tbody>, for the sort fade.
   const bodyRef = useRef<HTMLTableSectionElement>(null);
 
@@ -202,6 +210,7 @@ export function DataTable<TRow, TChild = never>(
 
   function handleSort(columnId: string): void {
     sorting.toggleSort(columnId);
+    setAnnouncement(describeSort(nextSort(sorting.sort, columnId), columns));
     // Server mode fades through data-refetching instead, once the new page arrives.
     if (!manualSorting) {
       playSortFade(bodyRef.current);
@@ -210,6 +219,19 @@ export function DataTable<TRow, TChild = never>(
     if (paging.pageIndex !== 0) {
       paging.setPageIndex(0);
     }
+  }
+
+  function handlePageIndexChange(pageIndex: number): void {
+    paging.setPageIndex(pageIndex);
+    setAnnouncement(describePage(pageIndex, paging.pageCount));
+  }
+
+  function handlePageSizeChange(pageSize: number): void {
+    paging.setPageSize(pageSize);
+    // A new size changes the page count and goes back to page 1.
+    setAnnouncement(
+      `${pageSize} rows per page. ${describePage(0, getPageCount(rowCount, pageSize))}`,
+    );
   }
 
   return (
@@ -248,10 +270,17 @@ export function DataTable<TRow, TChild = never>(
           pageCount={paging.pageCount}
           rowCount={rowCount}
           pageSizeOptions={paging.pageSizeOptions}
-          onPageIndexChange={paging.setPageIndex}
-          onPageSizeChange={paging.setPageSize}
+          onPageIndexChange={handlePageIndexChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       )}
+      {/* Polite live region: screen readers read it out when it changes, after what they're saying.
+          Rendered from the start (empty), because a live region added together with its text is
+          often not announced. role="status" implies aria-live="polite"; both for older readers.
+          See https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions */}
+      <p role="status" aria-live="polite" className={styles.visuallyHidden}>
+        {announcement}
+      </p>
     </div>
   );
 }

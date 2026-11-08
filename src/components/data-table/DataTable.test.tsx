@@ -82,6 +82,22 @@ describe("DataTable", () => {
     expect(firstColumn()).toEqual(["Abe", "Ben", "Cara"]);
   });
 
+  it("announces each sort change in a polite live region", async () => {
+    const user = userEvent.setup();
+    renderTable();
+    const button = screen.getByRole("button", { name: /Name/ });
+    const status = screen.getByRole("status");
+
+    // Empty until the user acts, so loading the table announces nothing.
+    expect(status).toBeEmptyDOMElement();
+    await user.click(button);
+    expect(status).toHaveTextContent("Sorted by Name, ascending.");
+    await user.click(button);
+    expect(status).toHaveTextContent("Sorted by Name, descending.");
+    await user.click(button);
+    expect(status).toHaveTextContent("Sort cleared.");
+  });
+
   it("renders no sort button for a non-sortable column", () => {
     renderTable();
 
@@ -130,6 +146,18 @@ describe("DataTable pagination", () => {
 
     await user.click(previous);
     expect(firstColumn()[0]).toBe("P11");
+  });
+
+  it("announces page and page-size changes", async () => {
+    const user = userEvent.setup();
+    renderPagedTable();
+    const status = screen.getByRole("status");
+
+    await user.click(screen.getByRole("button", { name: "Next" }));
+    expect(status).toHaveTextContent("Page 2 of 3.");
+
+    await user.selectOptions(screen.getByRole("combobox"), "20");
+    expect(status).toHaveTextContent("20 rows per page. Page 1 of 2.");
   });
 
   it("goes back to page 1 when the page size changes", async () => {
